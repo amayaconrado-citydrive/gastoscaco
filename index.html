@@ -349,15 +349,61 @@
 
     <!-- VISTA 3: DETALLE TARJETAS Y PRÉSTAMOS -->
     <section id="view-installments" class="hidden space-y-6">
+      
+      <!-- Selector / Filtro de Tarjeta o Préstamo -->
       <div class="glass-card p-5 rounded-2xl">
-        <h2 class="font-semibold text-base text-[#f5efe6] mb-1">Totales a Pagar por Tarjeta y Préstamo</h2>
-        <p class="text-xs text-[#b5aca2] mb-4">Suma consolidada que vence en el mes seleccionado.</p>
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div>
+            <h2 class="font-semibold text-base text-[#f5efe6]">Totales a Pagar por Tarjeta y Préstamo</h2>
+            <p class="text-xs text-[#b5aca2]">Hacé clic en una tarjeta o préstamo para filtrar sus consumos, editarlos y ver su proyección.</p>
+          </div>
+          <button id="btn-clear-entity-filter" onclick="selectEntityFilter('ALL')" class="hidden text-xs px-3 py-1 rounded-lg bg-[#26221e] hover:bg-[#332d27] border border-[#d4b996]/40 text-[#d4b996] font-medium">
+            Ver todas las entidades
+          </button>
+        </div>
+
+        <!-- Pills rápidas de filtro -->
+        <div id="entity-filter-pills" class="flex flex-wrap gap-2 mb-4"></div>
+
+        <!-- Tarjetas resumen clicables -->
         <div id="cards-breakdown" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
       </div>
 
+      <!-- Proyección específica de la Tarjeta / Préstamo seleccionado -->
+      <div class="glass-card p-5 rounded-2xl space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#36302a] pb-3">
+          <div>
+            <h2 id="entity-proj-title" class="font-semibold text-base text-[#f5efe6]">Proyección de Cuotas: Todas las Tarjetas y Préstamos</h2>
+            <p class="text-xs text-[#b5aca2]">Evolución mensual de lo que vas a pagar en cuotas a medida que vencen</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <select id="entity-proj-horizon" onchange="renderDashboard()" class="px-2.5 py-1 rounded-lg text-xs">
+              <option value="6">6 meses</option>
+              <option value="12">12 meses</option>
+            </select>
+            <div class="flex gap-1.5 bg-[#141210] p-1 rounded-lg border border-[#36302a]">
+              <button onclick="setEntityProjCurrency('ARS')" id="ent-proj-btn-ars" class="px-2.5 py-1 rounded text-xs font-semibold btn-sand">ARS</button>
+              <button onclick="setEntityProjCurrency('USD')" id="ent-proj-btn-usd" class="px-2.5 py-1 rounded text-xs font-medium text-[#b5aca2] hover:text-[#f5efe6]">USD</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="entity-proj-summary" class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs"></div>
+
+        <div class="relative h-60 w-full pt-2">
+          <canvas id="entityProjectionChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Listado editable de consumos financiados -->
       <div class="glass-card p-5 rounded-2xl">
-        <h2 class="font-semibold text-base text-[#f5efe6] mb-1">Detalle y Avance de Cuotas Activas</h2>
-        <p class="text-xs text-[#b5aca2] mb-4">Progreso individual de cada consumo financiado.</p>
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div>
+            <h2 id="installments-list-title" class="font-semibold text-base text-[#f5efe6]">Detalle y Avance de Cuotas Activas</h2>
+            <p class="text-xs text-[#b5aca2]">Usá el lápiz (✎) para editar monto, cuotas o fecha, o (×) para eliminar.</p>
+          </div>
+          <button onclick="openNewInstallmentForm()" class="text-xs text-[#d4b996] hover:text-[#e6cfb0] font-semibold">+ Cargar consumo en cuotas</button>
+        </div>
         <div id="installments-detail-list" class="space-y-3"></div>
       </div>
     </section>
@@ -426,7 +472,10 @@
     let currentUser = null;
     let chartCurrency = 'ARS';
     let projCurrency = 'ARS';
+    let entityProjCurrency = 'ARS';
+    let selectedEntityFilter = 'ALL'; // 'ALL' o 'card::Visa' / 'loan::BNA'
     let projChartInstance = null;
+    let entityProjChartInstance = null;
 
     let userConfig = {
       incomeCats: ["Sueldo", "Comisiones", "Otros"],
@@ -468,6 +517,39 @@
       document.getElementById('proj-btn-usd').className = curr === 'USD'
         ? "px-2.5 py-1 rounded text-xs font-semibold btn-sand"
         : "px-2.5 py-1 rounded text-xs font-medium text-[#b5aca2] hover:text-[#f5efe6]";
+      renderDashboard();
+    };
+
+    window.setEntityProjCurrency = (curr) => {
+      entityProjCurrency = curr;
+      document.getElementById('ent-proj-btn-ars').className = curr === 'ARS'
+        ? "px-2.5 py-1 rounded text-xs font-semibold btn-sand"
+        : "px-2.5 py-1 rounded text-xs font-medium text-[#b5aca2] hover:text-[#f5efe6]";
+      document.getElementById('ent-proj-btn-usd').className = curr === 'USD'
+        ? "px-2.5 py-1 rounded text-xs font-semibold btn-sand"
+        : "px-2.5 py-1 rounded text-xs font-medium text-[#b5aca2] hover:text-[#f5efe6]";
+      renderDashboard();
+    };
+
+    window.selectEntityFilter = (key) => {
+      if (selectedEntityFilter === key && key !== 'ALL') {
+        selectedEntityFilter = 'ALL';
+      } else {
+        selectedEntityFilter = key;
+      }
+      // Si la entidad elegida solo tiene gastos en USD (ej. Préstamo Otros USD), cambiar automáticamente moneda del gráfico
+      if (selectedEntityFilter !== 'ALL') {
+        const [method, entName] = selectedEntityFilter.split('::');
+        const hasArs = allTransactions.some(t => t.paymentMethod === method && t.entity === entName && t.currency === 'ARS');
+        const hasUsd = allTransactions.some(t => t.paymentMethod === method && t.entity === entName && t.currency === 'USD');
+        if (!hasArs && hasUsd && entityProjCurrency !== 'USD') {
+          setEntityProjCurrency('USD');
+          return;
+        } else if (hasArs && !hasUsd && entityProjCurrency !== 'ARS') {
+          setEntityProjCurrency('ARS');
+          return;
+        }
+      }
       renderDashboard();
     };
 
@@ -590,6 +672,20 @@
     // FORMULARIO DE MOVIMIENTOS
     window.openNewForm = () => {
       cancelEdit();
+      switchTab('new');
+    };
+
+    window.openNewInstallmentForm = () => {
+      cancelEdit();
+      if (selectedEntityFilter !== 'ALL') {
+        const [method, entName] = selectedEntityFilter.split('::');
+        document.getElementById('tx-payment-method').value = method;
+        toggleInstallmentFields();
+        document.getElementById('tx-entity').value = entName;
+      } else {
+        document.getElementById('tx-payment-method').value = 'card';
+        toggleInstallmentFields();
+      }
       switchTab('new');
     };
 
@@ -783,7 +879,7 @@
     }
 
     window.deleteTx = async (id) => {
-      if (!confirm("¿Eliminar este registro completo?")) return;
+      if (!confirm("¿Eliminar este registro completo (incluyendo todas sus cuotas)?")) return;
       await deleteDoc(doc(db, "users", currentUser.uid, "transactions", id));
     };
 
@@ -846,12 +942,29 @@
       return res;
     }
 
+    function getEntityCreditDue(monthStr, filterKey, curr) {
+      let total = 0;
+      allTransactions.forEach(tx => {
+        if (tx.type !== 'expense' || tx.isRecurring || tx.paymentMethod === 'cash') return;
+        if (tx.currency !== curr) return;
+        if (filterKey !== 'ALL') {
+          const [method, entName] = filterKey.split('::');
+          if (tx.paymentMethod !== method || tx.entity !== entName) return;
+        }
+        const diff = getMonthDiff(tx.date, monthStr);
+        if (diff >= 0 && diff < tx.installments) {
+          total += (tx.amount / tx.installments);
+        }
+      });
+      return total;
+    }
+
     function renderDashboard() {
       const selectedMonth = document.getElementById('month-selector').value;
       const totals = getMonthSummary(selectedMonth);
 
       let activeItems = [];
-      let entitySummary = {};
+      let entityCardsMap = {}; // key -> { key, filterKey, label, currency, amount }
       let activeInstallmentItems = [];
       let categoryTotals = { ARS: {}, USD: {} };
 
@@ -895,8 +1008,18 @@
             activeItems.push(itemObj);
             activeInstallmentItems.push(itemObj);
 
-            const groupKey = `${tx.paymentMethod === 'card' ? 'Tarjeta' : 'Préstamo'}: ${tx.entity} (${tx.currency})`;
-            entitySummary[groupKey] = (entitySummary[groupKey] || 0) + quotaAmount;
+            const filterKey = `${tx.paymentMethod}::${tx.entity}`;
+            const cardUniqueKey = `${filterKey}::${tx.currency}`;
+            const label = `${tx.paymentMethod === 'card' ? 'Tarjeta' : 'Préstamo'}: ${tx.entity} (${tx.currency})`;
+            if (!entityCardsMap[cardUniqueKey]) {
+              entityCardsMap[cardUniqueKey] = {
+                filterKey,
+                label,
+                currency: tx.currency,
+                amount: 0
+              };
+            }
+            entityCardsMap[cardUniqueKey].amount += quotaAmount;
           }
         }
       });
@@ -933,7 +1056,7 @@
               <span class="font-semibold text-sm ${item.type === 'income' ? 'text-[#9ec4a5]' : 'text-[#f5efe6]'}">
                 ${item.type === 'income' ? '+' : '-'} ${formatMoney(item.displayAmount, item.currency)}
               </span>
-              <button onclick="editTx('${item.id}')" title="Editar (o actualizar monto de aquí en adelante)" class="text-[#b5aca2] hover:text-[#d4b996] text-xs px-1">✎</button>
+              <button onclick="editTx('${item.id}')" title="Editar" class="text-[#b5aca2] hover:text-[#d4b996] text-xs px-1">✎</button>
               <button onclick="deleteTx('${item.id}')" title="Eliminar" class="text-[#b5aca2] hover:text-[#e5988e] text-sm px-1">&times;</button>
             </div>
           </div>
@@ -948,7 +1071,6 @@
         chartEl.innerHTML = `<p class="text-center text-sm text-[#9e958b] py-4">Sin gastos registrados en ${chartCurrency} para este mes.</p>`;
       } else {
         const maxVal = catEntries[0][1];
-        // Paleta cálida tierra / arena / oliva / terracota
         const barColors = [
           'bg-[#d4b996]', 'bg-[#c49a6c]', 'bg-[#86b08e]', 'bg-[#d98276]', 
           'bg-[#b5a38d]', 'bg-[#a38b71]', 'bg-[#8fa69d]', 'bg-[#c9a690]', 'bg-[#998d82]'
@@ -977,43 +1099,111 @@
       }
 
       renderProjectionChart(selectedMonth);
+      renderInstallmentsTab(selectedMonth, entityCardsMap, activeInstallmentItems);
+    }
 
+    function renderInstallmentsTab(selectedMonth, entityCardsMap, activeInstallmentItems) {
+      // Construir pills de todas las tarjetas y préstamos que tengan consumos cargados (activos o futuros)
+      const uniqueEntities = new Map();
+      allTransactions.forEach(tx => {
+        if (tx.type === 'expense' && !tx.isRecurring && tx.paymentMethod !== 'cash' && tx.entity) {
+          const fKey = `${tx.paymentMethod}::${tx.entity}`;
+          const label = `${tx.paymentMethod === 'card' ? 'Tarjeta' : 'Préstamo'}: ${tx.entity}`;
+          uniqueEntities.set(fKey, label);
+        }
+      });
+
+      const pillsEl = document.getElementById('entity-filter-pills');
+      const clearBtn = document.getElementById('btn-clear-entity-filter');
+
+      if (selectedEntityFilter !== 'ALL') {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+
+      let pillsHtml = `
+        <button onclick="selectEntityFilter('ALL')" class="px-3 py-1.5 rounded-lg text-xs font-medium transition ${selectedEntityFilter === 'ALL' ? 'btn-sand font-semibold' : 'bg-[#26221e] text-[#c7beb4] border border-[#3f3831] hover:text-[#f5efe6]'}">
+          Todas
+        </button>
+      `;
+      uniqueEntities.forEach((label, fKey) => {
+        const isActive = selectedEntityFilter === fKey;
+        pillsHtml += `
+          <button onclick="selectEntityFilter('${fKey}')" class="px-3 py-1.5 rounded-lg text-xs font-medium transition ${isActive ? 'btn-sand font-semibold' : 'bg-[#26221e] text-[#c7beb4] border border-[#3f3831] hover:text-[#f5efe6]'}">
+            ${label}
+          </button>
+        `;
+      });
+      pillsEl.innerHTML = pillsHtml;
+
+      // Tarjetas resumen clicables
       const breakdownEl = document.getElementById('cards-breakdown');
-      const entries = Object.entries(entitySummary);
-      if (entries.length === 0) {
+      const cardList = Object.values(entityCardsMap);
+      if (cardList.length === 0) {
         breakdownEl.innerHTML = `<p class="text-sm text-[#9e958b] col-span-2">No tenés cuotas de tarjetas ni préstamos activos este mes.</p>`;
       } else {
-        breakdownEl.innerHTML = entries.map(([name, val]) => {
-          const isUsd = name.includes('(USD)');
+        breakdownEl.innerHTML = cardList.map(c => {
+          const isSelected = selectedEntityFilter === c.filterKey;
           return `
-            <div class="p-4 rounded-xl bg-[#26221e]/80 border border-[#3f3831] flex items-center justify-between">
-              <span class="text-sm font-medium text-[#e6dfd7]">${name}</span>
-              <span class="text-base font-bold text-[#e3c08d]">${formatMoney(val, isUsd ? 'USD' : 'ARS')}</span>
-            </div>
+            <button type="button" onclick="selectEntityFilter('${c.filterKey}')" class="text-left p-4 rounded-xl transition flex items-center justify-between ${isSelected ? 'bg-[#d4b996]/15 border-2 border-[#d4b996]' : 'bg-[#26221e]/80 border border-[#3f3831] hover:border-[#d4b996]/50'}">
+              <div>
+                <span class="text-sm font-medium text-[#e6dfd7] block">${c.label}</span>
+                <span class="text-[11px] text-[#9e958b]">${isSelected ? 'Filtro activo • Clic para ver todas' : 'Clic para filtrar y ver proyección'}</span>
+              </div>
+              <span class="text-base font-bold text-[#e3c08d]">${formatMoney(c.amount, c.currency)}</span>
+            </button>
           `;
         }).join('');
       }
 
+      // Título dinámico según filtro
+      let filterDisplayName = 'Todas las Tarjetas y Préstamos';
+      if (selectedEntityFilter !== 'ALL') {
+        const [method, entName] = selectedEntityFilter.split('::');
+        filterDisplayName = `${method === 'card' ? 'Tarjeta' : 'Préstamo'}: ${entName}`;
+      }
+      document.getElementById('entity-proj-title').textContent = `Proyección de Cuotas: ${filterDisplayName}`;
+      document.getElementById('installments-list-title').textContent = selectedEntityFilter === 'ALL'
+        ? 'Detalle y Avance de Cuotas Activas (Todas)'
+        : `Consumos y Cuotas de ${filterDisplayName}`;
+
+      // Gráfico de proyección específico
+      renderEntityProjectionChart(selectedMonth);
+
+      // Filtrar listado de consumos activos
+      const filteredItems = activeInstallmentItems.filter(item => {
+        if (selectedEntityFilter === 'ALL') return true;
+        return `${item.paymentMethod}::${item.entity}` === selectedEntityFilter;
+      });
+
       const detailListEl = document.getElementById('installments-detail-list');
-      if (activeInstallmentItems.length === 0) {
-        detailListEl.innerHTML = `<p class="text-sm text-[#9e958b]">No hay consumos en cuotas registrados para este mes.</p>`;
+      if (filteredItems.length === 0) {
+        detailListEl.innerHTML = `<p class="text-sm text-[#9e958b]">No hay consumos en cuotas registrados para este filtro en el mes seleccionado.</p>`;
       } else {
-        activeInstallmentItems.sort((a, b) => b.displayAmount - a.displayAmount);
-        detailListEl.innerHTML = activeInstallmentItems.map(item => {
+        filteredItems.sort((a, b) => b.displayAmount - a.displayAmount);
+        detailListEl.innerHTML = filteredItems.map(item => {
           const progressPct = Math.round((item.currentQuota / item.installments) * 100);
           return `
             <div class="p-4 rounded-xl bg-[#26221e]/60 border border-[#3f3831] space-y-2.5">
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <div class="flex items-center gap-2">
+                  <div class="flex items-center gap-2 flex-wrap">
                     <span class="text-xs font-semibold px-2 py-0.5 rounded bg-[#d4b996]/15 text-[#e3c08d] border border-[#d4b996]/30">${item.entity}</span>
                     <span class="text-sm font-medium text-[#f5efe6]">${item.category}</span>
                     ${item.note ? `<span class="text-xs text-[#b5aca2]">• ${item.note}</span>` : ''}
                   </div>
+                  <p class="text-[11px] text-[#9e958b] mt-0.5">Inicio: ${item.date}</p>
                 </div>
-                <div class="text-right">
-                  <span class="text-sm font-bold text-[#f5efe6]">${formatMoney(item.displayAmount, item.currency)}</span>
-                  <span class="text-xs text-[#9e958b] block">Total: ${formatMoney(item.amount, item.currency)}</span>
+                <div class="flex items-center gap-3">
+                  <div class="text-right">
+                    <span class="text-sm font-bold text-[#f5efe6]">${formatMoney(item.displayAmount, item.currency)}</span>
+                    <span class="text-xs text-[#9e958b] block">Total: ${formatMoney(item.amount, item.currency)}</span>
+                  </div>
+                  <div class="flex items-center gap-1 border-l border-[#36302a] pl-2.5">
+                    <button onclick="editTx('${item.id}')" title="Editar consumo o cuotas" class="p-1.5 rounded-lg bg-[#1e1b18] hover:bg-[#332d27] text-[#c7beb4] hover:text-[#d4b996] text-xs transition">✎</button>
+                    <button onclick="deleteTx('${item.id}')" title="Eliminar consumo" class="p-1.5 rounded-lg bg-[#1e1b18] hover:bg-[#332d27] text-[#c7beb4] hover:text-[#e5988e] text-xs transition">&times;</button>
+                  </div>
                 </div>
               </div>
               <div class="space-y-1">
@@ -1029,6 +1219,99 @@
           `;
         }).join('');
       }
+    }
+
+    function renderEntityProjectionChart(baseMonth) {
+      const horizon = parseInt(document.getElementById('entity-proj-horizon').value) || 6;
+      const labels = [];
+      const series = [];
+
+      for (let i = 0; i < horizon; i++) {
+        const mStr = addMonths(baseMonth, i);
+        labels.push(formatMonthLabel(mStr));
+        series.push(Math.round(getEntityCreditDue(mStr, selectedEntityFilter, entityProjCurrency)));
+      }
+
+      const currentVal = series[0] || 0;
+      const endVal = series[series.length - 1] || 0;
+      const diffVal = endVal - currentVal;
+      const totalPeriod = series.reduce((a, b) => a + b, 0);
+
+      const summaryEl = document.getElementById('entity-proj-summary');
+      summaryEl.innerHTML = `
+        <div class="p-3 rounded-xl bg-[#26221e]/80 border border-[#3f3831]">
+          <p class="text-[#9e958b]">Vencimiento este mes (${labels[0]})</p>
+          <p class="text-sm font-bold text-[#e3c08d] mt-0.5">${formatMoney(currentVal, entityProjCurrency)}</p>
+        </div>
+        <div class="p-3 rounded-xl bg-[#26221e]/80 border border-[#3f3831]">
+          <p class="text-[#9e958b]">Proyección en ${labels[labels.length - 1]}</p>
+          <p class="text-sm font-bold ${diffVal <= 0 ? 'text-[#9ec4a5]' : 'text-[#e5988e]'} mt-0.5">
+            ${formatMoney(endVal, entityProjCurrency)} 
+            <span class="text-[11px] font-normal">(${diffVal <= 0 ? 'Baja ' : 'Sube '}${formatMoney(Math.abs(diffVal), entityProjCurrency)})</span>
+          </p>
+        </div>
+        <div class="p-3 rounded-xl bg-[#26221e]/80 border border-[#3f3831]">
+          <p class="text-[#9e958b]">Total a pagar en ${horizon} meses</p>
+          <p class="text-sm font-bold text-[#f5efe6] mt-0.5">${formatMoney(totalPeriod, entityProjCurrency)}</p>
+        </div>
+      `;
+
+      const ctx = document.getElementById('entityProjectionChart').getContext('2d');
+      if (entityProjChartInstance) {
+        entityProjChartInstance.destroy();
+      }
+
+      entityProjChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Cuota Mensual Comprometida',
+              data: series,
+              backgroundColor: 'rgba(212, 185, 150, 0.75)',
+              hoverBackgroundColor: '#d4b996',
+              borderColor: '#d4b996',
+              borderWidth: 1,
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: { color: '#c7beb4', font: { size: 11, family: 'Inter' } }
+            },
+            tooltip: {
+              backgroundColor: '#1e1b18',
+              borderColor: '#3f3831',
+              borderWidth: 1,
+              titleColor: '#f5efe6',
+              bodyColor: '#d1c8be',
+              callbacks: {
+                label: (context) => `${context.dataset.label}: ${formatMoney(context.parsed.y, entityProjCurrency)}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#9e958b', font: { size: 11 } }
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(54, 48, 42, 0.6)' },
+              ticks: {
+                color: '#9e958b',
+                font: { size: 11 },
+                callback: (val) => entityProjCurrency === 'USD' ? 'US$ ' + val.toLocaleString('es-AR') : '$ ' + val.toLocaleString('es-AR')
+              }
+            }
+          }
+        }
+      });
     }
 
     function renderProjectionChart(baseMonth) {
