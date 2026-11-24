@@ -6,7 +6,7 @@
   <title>Mis Finanzas | Control de Gastos</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Inter', sans-serif; background-color: #09090b; color: #f4f4f5; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -26,7 +26,6 @@
       <!-- Lado Caricatura Inspector -->
       <div class="flex-1 text-center md:text-right hidden md:block">
         <div class="relative inline-block">
-          <!-- Tu bulldog francés inspeccionando -->
           <img src="caricatura.png" alt="Inspector de Gastos" class="w-72 h-auto mx-auto transform -rotate-3 hover:rotate-0 transition duration-300">
           <div class="absolute -bottom-2 -right-2 bg-indigo-600 text-xs font-semibold px-3 py-1 rounded-full shadow-lg border border-indigo-500 transform rotate-6">
             ¡Controlando gastos! 🧐🐶
@@ -36,7 +35,6 @@
 
       <!-- Lado Formulario -->
       <div class="glass-card w-full max-w-md p-8 rounded-2xl shadow-2xl">
-        <!-- Avatar móvil visible solo en celulares -->
         <div class="block md:hidden text-center mb-4">
           <img src="caricatura.png" alt="Inspector de Gastos" class="w-24 h-auto mx-auto">
         </div>
@@ -58,10 +56,12 @@
             <label class="block text-xs font-medium text-zinc-400 mb-1">Contraseña</label>
             <input type="password" id="auth-password" required placeholder="Mínimo 6 caracteres" class="w-full px-3.5 py-2.5 rounded-xl text-sm">
           </div>
-          <p id="auth-error" class="text-xs text-rose-400 hidden"></p>
+          <p id="auth-error" class="text-xs text-rose-400 hidden bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg"></p>
+          <p id="auth-info" class="text-xs text-emerald-400 hidden bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-lg"></p>
           <div class="pt-2 flex flex-col gap-2.5">
             <button type="submit" id="btn-login" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-xl text-sm transition">Iniciar Sesión</button>
             <button type="button" id="btn-register" class="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-medium py-2.5 rounded-xl text-sm transition">Crear Cuenta Nueva</button>
+            <button type="button" id="btn-reset-pass" class="text-xs text-zinc-400 hover:text-indigo-400 pt-1 transition">¿Olvidaste tu contraseña? Restablecer por correo</button>
           </div>
         </form>
       </div>
@@ -75,7 +75,6 @@
     <!-- Header -->
     <header class="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-zinc-800">
       <div class="flex items-center gap-4">
-        <!-- Mini caricatura de avatar en el Header -->
         <div class="relative">
           <img src="caricatura.png" alt="Avatar" class="w-12 h-12 rounded-xl border border-zinc-800 bg-zinc-900 object-contain p-0.5">
           <span class="absolute -bottom-1 -right-1 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span></span>
@@ -107,7 +106,6 @@
       
       <!-- Tarjetas de Saldo ARS y USD -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Bloque ARS -->
         <div class="glass-card p-5 rounded-2xl space-y-4">
           <div class="flex items-center justify-between">
             <span class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Balance Pesos (ARS)</span>
@@ -133,7 +131,6 @@
           </div>
         </div>
 
-        <!-- Bloque USD -->
         <div class="glass-card p-5 rounded-2xl space-y-4">
           <div class="flex items-center justify-between">
             <span class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Balance Dólares (USD)</span>
@@ -171,7 +168,7 @@
         </div>
       </div>
 
-      <!-- Gráfico de Gastos por Categoría (De Mayor a Menor) -->
+      <!-- Gráfico de Gastos por Categoría -->
       <div class="glass-card p-5 rounded-2xl space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 pb-3">
           <div>
@@ -188,7 +185,7 @@
         </div>
       </div>
 
-      <!-- Curva de Proyección a 6 Meses -->
+      <!-- Curva de Proyección -->
       <div class="glass-card p-5 rounded-2xl space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 pb-3">
           <div>
@@ -261,4 +258,764 @@
           <div id="expense-payment-fields" class="space-y-4 pt-2 border-t border-zinc-800/80">
             <div>
               <label class="block text-xs text-zinc-400 mb-1">Medio de Pago</label>
-              <select id
+              <select id="tx-payment-method" onchange="toggleInstallmentFields()" class="w-full px-3 py-2.5 rounded-xl text-sm">
+                <option value="cash">Efectivo / Débito / Transferencia (Descuenta hoy)</option>
+                <option value="card">Tarjeta de Crédito</option>
+                <option value="loan">Préstamo</option>
+              </select>
+            </div>
+
+            <div id="card-loan-details" class="hidden grid grid-cols-2 gap-4">
+              <div>
+                <label id="entity-label" class="block text-xs text-zinc-400 mb-1">Tarjeta</label>
+                <select id="tx-entity" class="w-full px-3 py-2.5 rounded-xl text-sm"></select>
+              </div>
+              <div>
+                <label class="block text-xs text-zinc-400 mb-1">Cantidad de Cuotas</label>
+                <input type="number" id="tx-installments" min="1" max="60" value="1" class="w-full px-3 py-2.5 rounded-xl text-sm">
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs text-zinc-400 mb-1">Descripción / Nota (Opcional)</label>
+            <input type="text" id="tx-note" placeholder="Ej: Compra semanal, Pelotas padel, etc." class="w-full px-3 py-2.5 rounded-xl text-sm">
+          </div>
+
+          <button type="submit" id="btn-submit-tx" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl text-sm transition mt-2">
+            Guardar Movimiento
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- VISTA 3: DETALLE TARJETAS Y PRÉSTAMOS -->
+    <section id="view-installments" class="hidden space-y-6">
+      <div class="glass-card p-5 rounded-2xl">
+        <h2 class="font-semibold text-base mb-1">Totales a Pagar por Tarjeta y Préstamo</h2>
+        <p class="text-xs text-zinc-400 mb-4">Suma consolidada que vence en el mes seleccionado.</p>
+        <div id="cards-breakdown" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      </div>
+
+      <div class="glass-card p-5 rounded-2xl">
+        <h2 class="font-semibold text-base mb-1">Detalle y Avance de Cuotas Activas</h2>
+        <p class="text-xs text-zinc-400 mb-4">Progreso individual de cada consumo financiado.</p>
+        <div id="installments-detail-list" class="space-y-3"></div>
+      </div>
+    </section>
+
+    <!-- VISTA 4: CONFIGURACIÓN DE LISTAS -->
+    <section id="view-settings" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="glass-card p-5 rounded-2xl space-y-3">
+        <h3 class="font-semibold text-sm">Categorías de Gastos</h3>
+        <div class="flex gap-2">
+          <input type="text" id="new-expenseCat" placeholder="Nueva categoría..." class="flex-1 px-3 py-2 rounded-xl text-xs">
+          <button onclick="addConfigItem('expenseCats', 'new-expenseCat')" class="px-3 py-2 bg-indigo-600 rounded-xl text-xs font-medium">Agregar</button>
+        </div>
+        <div id="list-expenseCats" class="flex flex-wrap gap-2 pt-2"></div>
+      </div>
+
+      <div class="glass-card p-5 rounded-2xl space-y-3">
+        <h3 class="font-semibold text-sm">Categorías de Ingresos</h3>
+        <div class="flex gap-2">
+          <input type="text" id="new-incomeCat" placeholder="Nueva categoría..." class="flex-1 px-3 py-2 rounded-xl text-xs">
+          <button onclick="addConfigItem('incomeCats', 'new-incomeCat')" class="px-3 py-2 bg-indigo-600 rounded-xl text-xs font-medium">Agregar</button>
+        </div>
+        <div id="list-incomeCats" class="flex flex-wrap gap-2 pt-2"></div>
+      </div>
+
+      <div class="glass-card p-5 rounded-2xl space-y-3">
+        <h3 class="font-semibold text-sm">Tarjetas de Crédito</h3>
+        <div class="flex gap-2">
+          <input type="text" id="new-card" placeholder="Nueva tarjeta..." class="flex-1 px-3 py-2 rounded-xl text-xs">
+          <button onclick="addConfigItem('cards', 'new-card')" class="px-3 py-2 bg-indigo-600 rounded-xl text-xs font-medium">Agregar</button>
+        </div>
+        <div id="list-cards" class="flex flex-wrap gap-2 pt-2"></div>
+      </div>
+
+      <div class="glass-card p-5 rounded-2xl space-y-3">
+        <h3 class="font-semibold text-sm">Entidades de Préstamos</h3>
+        <div class="flex gap-2">
+          <input type="text" id="new-loan" placeholder="Nueva entidad..." class="flex-1 px-3 py-2 rounded-xl text-xs">
+          <button onclick="addConfigItem('loans', 'new-loan')" class="px-3 py-2 bg-indigo-600 rounded-xl text-xs font-medium">Agregar</button>
+        </div>
+        <div id="list-loans" class="flex flex-wrap gap-2 pt-2"></div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- FIREBASE SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, collection, addDoc, updateDoc, onSnapshot, deleteDoc, query } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDfqeDatx98CU5y9BXy6gHYNC97MKgVbMM",
+      authDomain: "gastoscaco-4008d.firebaseapp.com",
+      projectId: "gastoscaco-4008d",
+      storageBucket: "gastoscaco-4008d.firebasestorage.app",
+      messagingSenderId: "1005331331614",
+      appId: "1:1005331331614:web:589d28ec42188234168c0f",
+      measurementId: "G-8NBF418YCN"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    let chartCurrency = 'ARS';
+    let projCurrency = 'ARS';
+    let projChartInstance = null;
+
+    let userConfig = {
+      incomeCats: ["Sueldo", "Comisiones", "Otros"],
+      expenseCats: ["Supermercado", "Comida", "Salida/Juntada", "Auto", "Servicios", "Salud", "Ropa", "Hogar", "Padel"],
+      cards: ["Visa", "Mastercard", "MercadoPago", "AMEX"],
+      loans: ["MercadoPago", "BNA", "Santander", "Otros"]
+    };
+    let allTransactions = [];
+
+    const today = new Date();
+    const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    document.getElementById('month-selector').value = currentMonthStr;
+    document.getElementById('tx-date').value = today.toISOString().split('T')[0];
+
+    document.getElementById('month-selector').addEventListener('change', renderDashboard);
+
+    window.setChartCurrency = (curr) => {
+      chartCurrency = curr;
+      document.getElementById('chart-btn-ars').className = curr === 'ARS'
+        ? "px-2.5 py-1 rounded text-xs font-medium bg-indigo-600 text-white"
+        : "px-2.5 py-1 rounded text-xs font-medium text-zinc-400 hover:text-white";
+      document.getElementById('chart-btn-usd').className = curr === 'USD'
+        ? "px-2.5 py-1 rounded text-xs font-medium bg-indigo-600 text-white"
+        : "px-2.5 py-1 rounded text-xs font-medium text-zinc-400 hover:text-white";
+      renderDashboard();
+    };
+
+    window.setProjCurrency = (curr) => {
+      projCurrency = curr;
+      document.getElementById('proj-btn-ars').className = curr === 'ARS'
+        ? "px-2.5 py-1 rounded text-xs font-medium bg-indigo-600 text-white"
+        : "px-2.5 py-1 rounded text-xs font-medium text-zinc-400 hover:text-white";
+      document.getElementById('proj-btn-usd').className = curr === 'USD'
+        ? "px-2.5 py-1 rounded text-xs font-medium bg-indigo-600 text-white"
+        : "px-2.5 py-1 rounded text-xs font-medium text-zinc-400 hover:text-white";
+      renderDashboard();
+    };
+
+    // AUTHENTICATION
+    const authForm = document.getElementById('auth-form');
+    const authError = document.getElementById('auth-error');
+    const authInfo = document.getElementById('auth-info');
+
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      authError.classList.add('hidden');
+      authInfo.classList.add('hidden');
+      const email = document.getElementById('auth-email').value.trim();
+      const pass = document.getElementById('auth-password').value;
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+      } catch (err) {
+        authError.textContent = `No se pudo entrar (${err.code}). Verificá tu clave o usá el botón de restablecer contraseña.`;
+        authError.classList.remove('hidden');
+      }
+    });
+
+    document.getElementById('btn-register').addEventListener('click', async () => {
+      authError.classList.add('hidden');
+      authInfo.classList.add('hidden');
+      const email = document.getElementById('auth-email').value.trim();
+      const pass = document.getElementById('auth-password').value;
+      if (!email || pass.length < 6) {
+        authError.textContent = "Ingresá un correo válido y una contraseña de al menos 6 caracteres.";
+        authError.classList.remove('hidden');
+        return;
+      }
+      try {
+        await createUserWithEmailAndPassword(auth, email, pass);
+      } catch (err) {
+        authError.textContent = `Error al registrar (${err.code}). Si ya creaste la cuenta antes, usá "Iniciar Sesión".`;
+        authError.classList.remove('hidden');
+      }
+    });
+
+    document.getElementById('btn-reset-pass').addEventListener('click', async () => {
+      authError.classList.add('hidden');
+      authInfo.classList.add('hidden');
+      const email = document.getElementById('auth-email').value.trim();
+      if (!email) {
+        authError.textContent = "Escribí tu correo arriba primero para enviarte el link de recuperación.";
+        authError.classList.remove('hidden');
+        return;
+      }
+      try {
+        await sendPasswordResetEmail(auth, email);
+        authInfo.textContent = "Listo. Te enviamos un correo para restablecer tu contraseña (revisá también Spam).";
+        authInfo.classList.remove('hidden');
+      } catch (err) {
+        authError.textContent = `Error al enviar correo (${err.code}).`;
+        authError.classList.remove('hidden');
+      }
+    });
+
+    document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('app-screen').classList.remove('hidden');
+        document.getElementById('user-email-display').textContent = user.email;
+        await loadOrInitUserConfig();
+        listenTransactions();
+      } else {
+        currentUser = null;
+        document.getElementById('auth-screen').classList.remove('hidden');
+        document.getElementById('app-screen').classList.add('hidden');
+      }
+    });
+
+    // CONFIGURACIÓN DE USUARIO
+    async function loadOrInitUserConfig() {
+      const configRef = doc(db, "users", currentUser.uid, "settings", "lists");
+      const snap = await getDoc(configRef);
+      if (snap.exists()) {
+        userConfig = snap.data();
+      } else {
+        await setDoc(configRef, userConfig);
+      }
+      renderConfigUI();
+      populateFormSelects();
+    }
+
+    window.addConfigItem = async (key, inputId) => {
+      const input = document.getElementById(inputId);
+      const val = input.value.trim();
+      if (!val || userConfig[key].includes(val)) return;
+      userConfig[key].push(val);
+      input.value = '';
+      await setDoc(doc(db, "users", currentUser.uid, "settings", "lists"), userConfig);
+      renderConfigUI();
+      populateFormSelects();
+    };
+
+    window.removeConfigItem = async (key, val) => {
+      userConfig[key] = userConfig[key].filter(item => item !== val);
+      await setDoc(doc(db, "users", currentUser.uid, "settings", "lists"), userConfig);
+      renderConfigUI();
+      populateFormSelects();
+    };
+
+    function renderConfigUI() {
+      ['expenseCats', 'incomeCats', 'cards', 'loans'].forEach(key => {
+        const container = document.getElementById(`list-${key}`);
+        container.innerHTML = userConfig[key].map(item => `
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800 text-xs text-zinc-200 border border-zinc-700">
+            ${item}
+            <button onclick="removeConfigItem('${key}', '${item}')" class="text-zinc-400 hover:text-rose-400 font-bold">&times;</button>
+          </span>
+        `).join('');
+      });
+    }
+
+    // FORMULARIO DE MOVIMIENTOS
+    window.openNewForm = () => {
+      cancelEdit();
+      switchTab('new');
+    };
+
+    window.editTx = (id) => {
+      const tx = allTransactions.find(t => t.id === id);
+      if (!tx) return;
+
+      document.getElementById('edit-tx-id').value = tx.id;
+      document.getElementById('form-title').textContent = "Editar Movimiento";
+      document.getElementById('btn-submit-tx').textContent = "Actualizar Movimiento";
+      document.getElementById('btn-cancel-edit').classList.remove('hidden');
+
+      setTxType(tx.type);
+      document.getElementById('tx-currency').value = tx.currency;
+      document.getElementById('tx-amount').value = tx.amount;
+      document.getElementById('tx-category').value = tx.category;
+      document.getElementById('tx-date').value = tx.date;
+      document.getElementById('tx-note').value = tx.note || '';
+
+      if (tx.type === 'expense') {
+        document.getElementById('tx-payment-method').value = tx.paymentMethod || 'cash';
+        toggleInstallmentFields();
+        if (tx.paymentMethod !== 'cash') {
+          document.getElementById('tx-entity').value = tx.entity;
+          document.getElementById('tx-installments').value = tx.installments || 1;
+        }
+      }
+
+      switchTab('new');
+    };
+
+    window.cancelEdit = () => {
+      document.getElementById('edit-tx-id').value = '';
+      document.getElementById('form-title').textContent = "Registrar Movimiento";
+      document.getElementById('btn-submit-tx').textContent = "Guardar Movimiento";
+      document.getElementById('btn-cancel-edit').classList.add('hidden');
+      document.getElementById('tx-amount').value = '';
+      document.getElementById('tx-note').value = '';
+      document.getElementById('tx-installments').value = '1';
+      document.getElementById('tx-date').value = new Date().toISOString().split('T')[0];
+      setTxType('expense');
+      document.getElementById('tx-payment-method').value = 'cash';
+      toggleInstallmentFields();
+    };
+
+    window.setTxType = (type) => {
+      document.getElementById('tx-type').value = type;
+      const btnExp = document.getElementById('type-expense');
+      const btnInc = document.getElementById('type-income');
+      const payFields = document.getElementById('expense-payment-fields');
+
+      if (type === 'expense') {
+        btnExp.className = "py-2 rounded-lg text-sm font-medium bg-rose-500/20 text-rose-400 border border-rose-500/30";
+        btnInc.className = "py-2 rounded-lg text-sm font-medium text-zinc-400";
+        payFields.classList.remove('hidden');
+      } else {
+        btnInc.className = "py-2 rounded-lg text-sm font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+        btnExp.className = "py-2 rounded-lg text-sm font-medium text-zinc-400";
+        payFields.classList.add('hidden');
+      }
+      populateFormSelects();
+    };
+
+    window.toggleInstallmentFields = () => {
+      const method = document.getElementById('tx-payment-method').value;
+      const details = document.getElementById('card-loan-details');
+      const label = document.getElementById('entity-label');
+      if (method === 'cash') {
+        details.classList.add('hidden');
+      } else {
+        details.classList.remove('hidden');
+        label.textContent = method === 'card' ? 'Tarjeta' : 'Préstamo';
+        populateEntitySelect(method);
+      }
+    };
+
+    function populateEntitySelect(method) {
+      const select = document.getElementById('tx-entity');
+      const list = method === 'card' ? userConfig.cards : userConfig.loans;
+      select.innerHTML = list.map(i => `<option value="${i}">${i}</option>`).join('');
+    }
+
+    function populateFormSelects() {
+      const type = document.getElementById('tx-type').value;
+      const catSelect = document.getElementById('tx-category');
+      const list = type === 'expense' ? userConfig.expenseCats : userConfig.incomeCats;
+      catSelect.innerHTML = list.map(c => `<option value="${c}">${c}</option>`).join('');
+      
+      const method = document.getElementById('tx-payment-method').value;
+      if (method !== 'cash') populateEntitySelect(method);
+    }
+
+    document.getElementById('tx-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const editId = document.getElementById('edit-tx-id').value;
+      const type = document.getElementById('tx-type').value;
+      const currency = document.getElementById('tx-currency').value;
+      const amount = parseFloat(document.getElementById('tx-amount').value);
+      const category = document.getElementById('tx-category').value;
+      const date = document.getElementById('tx-date').value;
+      const note = document.getElementById('tx-note').value.trim();
+
+      let paymentMethod = 'cash';
+      let entity = '';
+      let installments = 1;
+
+      if (type === 'expense') {
+        paymentMethod = document.getElementById('tx-payment-method').value;
+        if (paymentMethod !== 'cash') {
+          entity = document.getElementById('tx-entity').value;
+          installments = parseInt(document.getElementById('tx-installments').value) || 1;
+        }
+      }
+
+      const payload = { type, currency, amount, category, date, note, paymentMethod, entity, installments };
+
+      if (editId) {
+        await updateDoc(doc(db, "users", currentUser.uid, "transactions", editId), payload);
+      } else {
+        await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
+          ...payload,
+          createdAt: Date.now()
+        });
+      }
+
+      cancelEdit();
+      switchTab('dashboard');
+    });
+
+    // ESCUCHAR DATOS EN TIEMPO REAL
+    function listenTransactions() {
+      const q = query(collection(db, "users", currentUser.uid, "transactions"));
+      onSnapshot(q, (snapshot) => {
+        allTransactions = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderDashboard();
+      });
+    }
+
+    window.deleteTx = async (id) => {
+      if (!confirm("¿Eliminar este registro completo (incluyendo todas sus cuotas)?")) return;
+      await deleteDoc(doc(db, "users", currentUser.uid, "transactions", id));
+    };
+
+    // UTILIDADES
+    function getMonthDiff(startDateStr, targetMonthStr) {
+      const [sYear, sMonth] = startDateStr.split('-').map(Number);
+      const [tYear, tMonth] = targetMonthStr.split('-').map(Number);
+      return (tYear - sYear) * 12 + (tMonth - sMonth);
+    }
+
+    function addMonths(baseMonthStr, offset) {
+      const [year, month] = baseMonthStr.split('-').map(Number);
+      const d = new Date(year, month - 1 + offset, 1);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    function formatMonthLabel(monthStr) {
+      const [year, month] = monthStr.split('-').map(Number);
+      const names = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+      return `${names[month - 1]} ${String(year).slice(2)}`;
+    }
+
+    function formatMoney(num, curr) {
+      const prefix = curr === 'USD' ? 'US$ ' : '$ ';
+      return prefix + num.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    }
+
+    function getMonthSummary(monthStr) {
+      const res = {
+        ARS: { income: 0, cashExp: 0, creditDue: 0 },
+        USD: { income: 0, cashExp: 0, creditDue: 0 }
+      };
+      allTransactions.forEach(tx => {
+        const diff = getMonthDiff(tx.date, monthStr);
+        if (tx.type === 'income' && diff === 0) {
+          res[tx.currency].income += tx.amount;
+        } else if (tx.type === 'expense') {
+          if (tx.paymentMethod === 'cash' && diff === 0) {
+            res[tx.currency].cashExp += tx.amount;
+          } else if (tx.paymentMethod !== 'cash' && diff >= 0 && diff < tx.installments) {
+            res[tx.currency].creditDue += (tx.amount / tx.installments);
+          }
+        }
+      });
+      return res;
+    }
+
+    function renderDashboard() {
+      const selectedMonth = document.getElementById('month-selector').value;
+      const totals = getMonthSummary(selectedMonth);
+
+      let activeItems = [];
+      let entitySummary = {};
+      let activeInstallmentItems = [];
+      let categoryTotals = { ARS: {}, USD: {} };
+
+      allTransactions.forEach(tx => {
+        const diff = getMonthDiff(tx.date, selectedMonth);
+
+        if (tx.type === 'income' && diff === 0) {
+          activeItems.push({ ...tx, displayAmount: tx.amount, cuotaInfo: null });
+        } 
+        else if (tx.type === 'expense') {
+          if (tx.paymentMethod === 'cash' && diff === 0) {
+            activeItems.push({ ...tx, displayAmount: tx.amount, cuotaInfo: 'Contado / Débito' });
+            categoryTotals[tx.currency][tx.category] = (categoryTotals[tx.currency][tx.category] || 0) + tx.amount;
+          } 
+          else if (tx.paymentMethod !== 'cash' && diff >= 0 && diff < tx.installments) {
+            const quotaAmount = tx.amount / tx.installments;
+            const currentQuota = diff + 1;
+            
+            categoryTotals[tx.currency][tx.category] = (categoryTotals[tx.currency][tx.category] || 0) + quotaAmount;
+
+            const itemObj = { 
+              ...tx, 
+              displayAmount: quotaAmount, 
+              currentQuota,
+              cuotaInfo: `${tx.entity} • Cuota ${currentQuota}/${tx.installments}` 
+            };
+
+            activeItems.push(itemObj);
+            activeInstallmentItems.push(itemObj);
+
+            const groupKey = `${tx.paymentMethod === 'card' ? 'Tarjeta' : 'Préstamo'}: ${tx.entity} (${tx.currency})`;
+            entitySummary[groupKey] = (entitySummary[groupKey] || 0) + quotaAmount;
+          }
+        }
+      });
+
+      ['ARS', 'USD'].forEach(curr => {
+        const t = totals[curr];
+        const balance = t.income - t.cashExp - t.creditDue;
+        const lower = curr.toLowerCase();
+        
+        const balEl = document.getElementById(`${lower}-balance`);
+        balEl.textContent = formatMoney(balance, curr);
+        balEl.className = `text-3xl font-bold tracking-tight mt-0.5 ${balance >= 0 ? 'text-white' : 'text-rose-400'}`;
+
+        document.getElementById(`${lower}-income`).textContent = formatMoney(t.income, curr);
+        document.getElementById(`${lower}-cash-expense`).textContent = formatMoney(t.cashExp, curr);
+        document.getElementById(`${lower}-credit-due`).textContent = formatMoney(t.creditDue, curr);
+      });
+
+      const listEl = document.getElementById('transactions-list');
+      if (activeItems.length === 0) {
+        listEl.innerHTML = `<p class="p-8 text-center text-sm text-zinc-500">No hay movimientos registrados para este mes.</p>`;
+      } else {
+        activeItems.sort((a, b) => b.createdAt - a.createdAt);
+        listEl.innerHTML = activeItems.map(item => `
+          <div class="p-4 flex items-center justify-between gap-4 hover:bg-zinc-900/40 transition">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-sm text-zinc-100 truncate">${item.category}</span>
+                ${item.cuotaInfo ? `<span class="text-[11px] px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-300 border border-zinc-700">${item.cuotaInfo}</span>` : ''}
+              </div>
+              <p class="text-xs text-zinc-500 mt-0.5 truncate">${item.note || item.date}</p>
+            </div>
+            <div class="flex items-center gap-2.5 shrink-0">
+              <span class="font-semibold text-sm ${item.type === 'income' ? 'text-emerald-400' : 'text-zinc-200'}">
+                ${item.type === 'income' ? '+' : '-'} ${formatMoney(item.displayAmount, item.currency)}
+              </span>
+              <button onclick="editTx('${item.id}')" title="Editar" class="text-zinc-500 hover:text-indigo-400 text-xs px-1">✎</button>
+              <button onclick="deleteTx('${item.id}')" title="Eliminar" class="text-zinc-500 hover:text-rose-400 text-sm px-1">&times;</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      const chartEl = document.getElementById('category-chart');
+      const catEntries = Object.entries(categoryTotals[chartCurrency]).sort((a, b) => b[1] - a[1]);
+      const totalExpenseCurr = catEntries.reduce((acc, [, val]) => acc + val, 0);
+
+      if (catEntries.length === 0) {
+        chartEl.innerHTML = `<p class="text-center text-sm text-zinc-500 py-4">Sin gastos registrados en ${chartCurrency} para este mes.</p>`;
+      } else {
+        const maxVal = catEntries[0][1];
+        const barColors = [
+          'bg-indigo-500', 'bg-violet-500', 'bg-sky-500', 'bg-emerald-500', 
+          'bg-amber-500', 'bg-rose-500', 'bg-fuchsia-500', 'bg-cyan-500', 'bg-teal-500'
+        ];
+
+        chartEl.innerHTML = catEntries.map(([cat, val], idx) => {
+          const pctOfTotal = ((val / totalExpenseCurr) * 100).toFixed(1);
+          const barWidth = Math.max((val / maxVal) * 100, 4);
+          const colorClass = barColors[idx % barColors.length];
+
+          return `
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2">
+                  <span class="font-medium text-zinc-200">${cat}</span>
+                  <span class="text-zinc-500">(${pctOfTotal}%)</span>
+                </div>
+                <span class="font-semibold text-zinc-100">${formatMoney(val, chartCurrency)}</span>
+              </div>
+              <div class="w-full h-2.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800/80">
+                <div class="${colorClass} h-full rounded-full transition-all duration-500" style="width: ${barWidth}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      renderProjectionChart(selectedMonth);
+
+      const breakdownEl = document.getElementById('cards-breakdown');
+      const entries = Object.entries(entitySummary);
+      if (entries.length === 0) {
+        breakdownEl.innerHTML = `<p class="text-sm text-zinc-500 col-span-2">No tenés cuotas de tarjetas ni préstamos activos este mes.</p>`;
+      } else {
+        breakdownEl.innerHTML = entries.map(([name, val]) => {
+          const isUsd = name.includes('(USD)');
+          return `
+            <div class="p-4 rounded-xl bg-zinc-900/70 border border-zinc-800 flex items-center justify-between">
+              <span class="text-sm font-medium text-zinc-300">${name}</span>
+              <span class="text-base font-bold text-amber-400">${formatMoney(val, isUsd ? 'USD' : 'ARS')}</span>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const detailListEl = document.getElementById('installments-detail-list');
+      if (activeInstallmentItems.length === 0) {
+        detailListEl.innerHTML = `<p class="text-sm text-zinc-500">No hay consumos en cuotas registrados para este mes.</p>`;
+      } else {
+        activeInstallmentItems.sort((a, b) => b.displayAmount - a.displayAmount);
+        detailListEl.innerHTML = activeInstallmentItems.map(item => {
+          const progressPct = Math.round((item.currentQuota / item.installments) * 100);
+          return `
+            <div class="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/90 space-y-2.5">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">${item.entity}</span>
+                    <span class="text-sm font-medium text-zinc-100">${item.category}</span>
+                    ${item.note ? `<span class="text-xs text-zinc-400">• ${item.note}</span>` : ''}
+                  </div>
+                </div>
+                <div class="text-right">
+                  <span class="text-sm font-bold text-zinc-100">${formatMoney(item.displayAmount, item.currency)}</span>
+                  <span class="text-xs text-zinc-500 block">Total: ${formatMoney(item.amount, item.currency)}</span>
+                </div>
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs">
+                  <span class="text-zinc-400 font-medium">Avance: <strong class="text-zinc-200">${item.currentQuota}/${item.installments}</strong></span>
+                  <span class="text-zinc-500">${progressPct}% completado</span>
+                </div>
+                <div class="w-full h-2 bg-zinc-950 rounded-full overflow-hidden border border-zinc-800">
+                  <div class="bg-amber-400 h-full rounded-full transition-all duration-500" style="width: ${progressPct}%"></div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function renderProjectionChart(baseMonth) {
+      const horizon = parseInt(document.getElementById('projection-horizon').value) || 6;
+      const labels = [];
+      const creditSeries = [];
+      const totalExpenseSeries = [];
+      const incomeSeries = [];
+
+      for (let i = 0; i < horizon; i++) {
+        const mStr = addMonths(baseMonth, i);
+        const summary = getMonthSummary(mStr)[projCurrency];
+        labels.push(formatMonthLabel(mStr));
+        creditSeries.push(Math.round(summary.creditDue));
+        totalExpenseSeries.push(Math.round(summary.creditDue + summary.cashExp));
+        incomeSeries.push(Math.round(summary.income));
+      }
+
+      const currentCredit = creditSeries[0] || 0;
+      const endCredit = creditSeries[creditSeries.length - 1] || 0;
+      const diffCredit = endCredit - currentCredit;
+      const totalCommittedHorizon = creditSeries.reduce((a, b) => a + b, 0);
+
+      const summaryEl = document.getElementById('projection-summary');
+      summaryEl.innerHTML = `
+        <div class="p-3 rounded-xl bg-zinc-900/70 border border-zinc-800">
+          <p class="text-zinc-500">Cuotas este mes (${labels[0]})</p>
+          <p class="text-sm font-bold text-amber-400 mt-0.5">${formatMoney(currentCredit, projCurrency)}</p>
+        </div>
+        <div class="p-3 rounded-xl bg-zinc-900/70 border border-zinc-800">
+          <p class="text-zinc-500">Cuotas en ${labels[labels.length - 1]}</p>
+          <p class="text-sm font-bold ${diffCredit <= 0 ? 'text-emerald-400' : 'text-rose-400'} mt-0.5">
+            ${formatMoney(endCredit, projCurrency)} 
+            <span class="text-[11px] font-normal">(${diffCredit <= 0 ? 'Baja ' : 'Sube '}${formatMoney(Math.abs(diffCredit), projCurrency)})</span>
+          </p>
+        </div>
+        <div class="p-3 rounded-xl bg-zinc-900/70 border border-zinc-800">
+          <p class="text-zinc-500">Deuda total en próximos ${horizon}m</p>
+          <p class="text-sm font-bold text-zinc-200 mt-0.5">${formatMoney(totalCommittedHorizon, projCurrency)}</p>
+        </div>
+      `;
+
+      const ctx = document.getElementById('projectionChart').getContext('2d');
+      if (projChartInstance) {
+        projChartInstance.destroy();
+      }
+
+      projChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Cuotas Tarjetas / Préstamos',
+              data: creditSeries,
+              borderColor: '#fbbf24',
+              backgroundColor: 'rgba(251, 191, 36, 0.12)',
+              borderWidth: 2.5,
+              tension: 0.35,
+              fill: true,
+              pointRadius: 4,
+              pointBackgroundColor: '#fbbf24'
+            },
+            {
+              label: 'Egresos Totales (Cuotas + Contado)',
+              data: totalExpenseSeries,
+              borderColor: '#fb7185',
+              backgroundColor: 'transparent',
+              borderWidth: 2,
+              borderDash: [5, 5],
+              tension: 0.35,
+              pointRadius: 3,
+              pointBackgroundColor: '#fb7185'
+            },
+            {
+              label: 'Ingresos Registrados',
+              data: incomeSeries,
+              borderColor: '#34d399',
+              backgroundColor: 'transparent',
+              borderWidth: 2,
+              tension: 0.35,
+              pointRadius: 3,
+              pointBackgroundColor: '#34d399'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              labels: { color: '#a1a1aa', font: { size: 11, family: 'Inter' } }
+            },
+            tooltip: {
+              backgroundColor: '#18181b',
+              borderColor: '#27272a',
+              borderWidth: 1,
+              titleColor: '#f4f4f5',
+              bodyColor: '#d4d4d8',
+              callbacks: {
+                label: (context) => `${context.dataset.label}: ${formatMoney(context.parsed.y, projCurrency)}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(39, 39, 42, 0.5)' },
+              ticks: { color: '#71717a', font: { size: 11 } }
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(39, 39, 42, 0.5)' },
+              ticks: {
+                color: '#71717a',
+                font: { size: 11 },
+                callback: (val) => projCurrency === 'USD' ? 'US$ ' + val.toLocaleString('es-AR') : '$ ' + val.toLocaleString('es-AR')
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // NAVEGACIÓN DE PESTAÑAS
+    window.switchTab = (tabName) => {
+      ['dashboard', 'new', 'installments', 'settings'].forEach(t => {
+        document.getElementById(`view-${t}`).classList.add('hidden');
+        const btn = document.getElementById(`tab-${t}`);
+        btn.className = "tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-zinc-900 text-zinc-400 hover:text-white transition";
+      });
+      document.getElementById(`view-${tabName}`).classList.remove('hidden');
+      document.getElementById(`tab-${tabName}`).className = "tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-indigo-600 text-white transition";
+    };
+  </script>
+</body>
+</html>
