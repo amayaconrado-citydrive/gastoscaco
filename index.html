@@ -58,9 +58,7 @@
       </div>
       
       <div class="flex items-center gap-3">
-        <!-- Selector de Mes -->
         <input type="month" id="month-selector" class="px-3 py-1.5 rounded-lg text-sm font-medium">
-        
         <button id="btn-logout" class="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs text-zinc-400 hover:text-zinc-200 transition">
           Salir
         </button>
@@ -143,6 +141,24 @@
           <p class="p-6 text-center text-sm text-zinc-500">Cargando movimientos...</p>
         </div>
       </div>
+
+      <!-- Gráfico de Gastos por Categoría (De Mayor a Menor) -->
+      <div class="glass-card p-5 rounded-2xl space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 pb-3">
+          <div>
+            <h2 class="font-semibold text-sm">Distribución de Gastos por Categoría</h2>
+            <p class="text-xs text-zinc-400">Ordenado de mayor a menor impacto en el mes seleccionado</p>
+          </div>
+          <div class="flex gap-1.5 bg-zinc-900 p-1 rounded-lg border border-zinc-800">
+            <button onclick="setChartCurrency('ARS')" id="chart-btn-ars" class="px-2.5 py-1 rounded text-xs font-medium bg-indigo-600 text-white">ARS</button>
+            <button onclick="setChartCurrency('USD')" id="chart-btn-usd" class="px-2.5 py-1 rounded text-xs font-medium text-zinc-400 hover:text-white">USD</button>
+          </div>
+        </div>
+        <div id="category-chart" class="space-y-3.5 pt-1">
+          <p class="text-center text-sm text-zinc-500 py-4">Sin gastos registrados en este mes.</p>
+        </div>
+      </div>
+
     </section>
 
     <!-- VISTA 2: NUEVO MOVIMIENTO -->
@@ -151,7 +167,6 @@
         <h2 class="text-lg font-semibold mb-5">Registrar Movimiento</h2>
         
         <form id="tx-form" class="space-y-4">
-          <!-- Tipo -->
           <div class="grid grid-cols-2 gap-2 p-1 bg-zinc-900 rounded-xl border border-zinc-800">
             <button type="button" id="type-expense" onclick="setTxType('expense')" class="py-2 rounded-lg text-sm font-medium bg-rose-500/20 text-rose-400 border border-rose-500/30">Egreso / Gasto</button>
             <button type="button" id="type-income" onclick="setTxType('income')" class="py-2 rounded-lg text-sm font-medium text-zinc-400">Ingreso</button>
@@ -183,7 +198,6 @@
             </div>
           </div>
 
-          <!-- Medio de Pago (Solo Gastos) -->
           <div id="expense-payment-fields" class="space-y-4 pt-2 border-t border-zinc-800/80">
             <div>
               <label class="block text-xs text-zinc-400 mb-1">Medio de Pago</label>
@@ -220,16 +234,23 @@
 
     <!-- VISTA 3: DETALLE TARJETAS Y PRÉSTAMOS -->
     <section id="view-installments" class="hidden space-y-6">
+      <!-- Totales agrupados -->
       <div class="glass-card p-5 rounded-2xl">
-        <h2 class="font-semibold text-base mb-1">Desglose de Tarjetas y Préstamos del Mes</h2>
-        <p class="text-xs text-zinc-400 mb-5">Resumen de cuotas que vencen en el mes seleccionado arriba.</p>
+        <h2 class="font-semibold text-base mb-1">Totales a Pagar por Tarjeta y Préstamo</h2>
+        <p class="text-xs text-zinc-400 mb-4">Suma consolidada que vence en el mes seleccionado.</p>
         <div id="cards-breakdown" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      </div>
+
+      <!-- Detalle individual con avance de cuotas -->
+      <div class="glass-card p-5 rounded-2xl">
+        <h2 class="font-semibold text-base mb-1">Detalle y Avance de Cuotas Activas</h2>
+        <p class="text-xs text-zinc-400 mb-4">Progreso individual de cada consumo financiado.</p>
+        <div id="installments-detail-list" class="space-y-3"></div>
       </div>
     </section>
 
     <!-- VISTA 4: CONFIGURACIÓN DE LISTAS -->
     <section id="view-settings" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Categorías Gastos -->
       <div class="glass-card p-5 rounded-2xl space-y-3">
         <h3 class="font-semibold text-sm">Categorías de Gastos</h3>
         <div class="flex gap-2">
@@ -239,7 +260,6 @@
         <div id="list-expenseCats" class="flex flex-wrap gap-2 pt-2"></div>
       </div>
 
-      <!-- Categorías Ingresos -->
       <div class="glass-card p-5 rounded-2xl space-y-3">
         <h3 class="font-semibold text-sm">Categorías de Ingresos</h3>
         <div class="flex gap-2">
@@ -249,7 +269,6 @@
         <div id="list-incomeCats" class="flex flex-wrap gap-2 pt-2"></div>
       </div>
 
-      <!-- Tarjetas -->
       <div class="glass-card p-5 rounded-2xl space-y-3">
         <h3 class="font-semibold text-sm">Tarjetas de Crédito</h3>
         <div class="flex gap-2">
@@ -259,7 +278,6 @@
         <div id="list-cards" class="flex flex-wrap gap-2 pt-2"></div>
       </div>
 
-      <!-- Préstamos -->
       <div class="glass-card p-5 rounded-2xl space-y-3">
         <h3 class="font-semibold text-sm">Entidades de Préstamos</h3>
         <div class="flex gap-2">
@@ -293,6 +311,7 @@
     const db = getFirestore(app);
 
     let currentUser = null;
+    let chartCurrency = 'ARS';
     let userConfig = {
       incomeCats: ["Sueldo", "Comisiones", "Otros"],
       expenseCats: ["Supermercado", "Comida", "Salida/Juntada", "Auto", "Servicios", "Salud", "Ropa", "Hogar", "Padel"],
@@ -301,13 +320,23 @@
     };
     let allTransactions = [];
 
-    // Inicializar fecha y mes actual
     const today = new Date();
     const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
     document.getElementById('month-selector').value = currentMonthStr;
     document.getElementById('tx-date').value = today.toISOString().split('T')[0];
 
     document.getElementById('month-selector').addEventListener('change', renderDashboard);
+
+    window.setChartCurrency = (curr) => {
+      chartCurrency = curr;
+      document.getElementById('chart-btn-ars').className = curr === 'ARS'
+        ? "px-2.5 py-1 rounded text-xs font-medium bg-indigo-600 text-white"
+        : "px-2.5 py-1 rounded text-xs font-medium text-zinc-400 hover:text-white";
+      document.getElementById('chart-btn-usd').className = curr === 'USD'
+        ? "px-2.5 py-1 rounded text-xs font-medium bg-indigo-600 text-white"
+        : "px-2.5 py-1 rounded text-xs font-medium text-zinc-400 hover:text-white";
+      renderDashboard();
+    };
 
     // AUTHENTICATION
     const authForm = document.getElementById('auth-form');
@@ -519,6 +548,8 @@
 
       let activeItems = [];
       let entitySummary = {};
+      let activeInstallmentItems = [];
+      let categoryTotals = { ARS: {}, USD: {} };
 
       allTransactions.forEach(tx => {
         const diff = getMonthDiff(tx.date, selectedMonth);
@@ -531,16 +562,24 @@
           if (tx.paymentMethod === 'cash' && diff === 0) {
             totals[tx.currency].cashExp += tx.amount;
             activeItems.push({ ...tx, displayAmount: tx.amount, cuotaInfo: 'Contado / Débito' });
+            categoryTotals[tx.currency][tx.category] = (categoryTotals[tx.currency][tx.category] || 0) + tx.amount;
           } 
           else if (tx.paymentMethod !== 'cash' && diff >= 0 && diff < tx.installments) {
             const quotaAmount = tx.amount / tx.installments;
             totals[tx.currency].creditDue += quotaAmount;
             const currentQuota = diff + 1;
-            activeItems.push({ 
+            
+            categoryTotals[tx.currency][tx.category] = (categoryTotals[tx.currency][tx.category] || 0) + quotaAmount;
+
+            const itemObj = { 
               ...tx, 
               displayAmount: quotaAmount, 
+              currentQuota,
               cuotaInfo: `${tx.entity} • Cuota ${currentQuota}/${tx.installments}` 
-            });
+            };
+
+            activeItems.push(itemObj);
+            activeInstallmentItems.push(itemObj);
 
             const groupKey = `${tx.paymentMethod === 'card' ? 'Tarjeta' : 'Préstamo'}: ${tx.entity} (${tx.currency})`;
             entitySummary[groupKey] = (entitySummary[groupKey] || 0) + quotaAmount;
@@ -588,7 +627,43 @@
         `).join('');
       }
 
-      // Renderizar pestaña Tarjetas y Préstamos
+      // Renderizar Gráfico de Barras por Categoría (Mayor a Menor)
+      const chartEl = document.getElementById('category-chart');
+      const catEntries = Object.entries(categoryTotals[chartCurrency]).sort((a, b) => b[1] - a[1]);
+      const totalExpenseCurr = catEntries.reduce((acc, [, val]) => acc + val, 0);
+
+      if (catEntries.length === 0) {
+        chartEl.innerHTML = `<p class="text-center text-sm text-zinc-500 py-4">Sin gastos registrados en ${chartCurrency} para este mes.</p>`;
+      } else {
+        const maxVal = catEntries[0][1];
+        const barColors = [
+          'bg-indigo-500', 'bg-violet-500', 'bg-sky-500', 'bg-emerald-500', 
+          'bg-amber-500', 'bg-rose-500', 'bg-fuchsia-500', 'bg-cyan-500', 'bg-teal-500'
+        ];
+
+        chartEl.innerHTML = catEntries.map(([cat, val], idx) => {
+          const pctOfTotal = ((val / totalExpenseCurr) * 100).toFixed(1);
+          const barWidth = Math.max((val / maxVal) * 100, 4);
+          const colorClass = barColors[idx % barColors.length];
+
+          return `
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2">
+                  <span class="font-medium text-zinc-200">${cat}</span>
+                  <span class="text-zinc-500">(${pctOfTotal}%)</span>
+                </div>
+                <span class="font-semibold text-zinc-100">${formatMoney(val, chartCurrency)}</span>
+              </div>
+              <div class="w-full h-2.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800/80">
+                <div class="${colorClass} h-full rounded-full transition-all duration-500" style="width: ${barWidth}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Renderizar pestaña Tarjetas y Préstamos (Totales)
       const breakdownEl = document.getElementById('cards-breakdown');
       const entries = Object.entries(entitySummary);
       if (entries.length === 0) {
@@ -600,6 +675,43 @@
             <div class="p-4 rounded-xl bg-zinc-900/70 border border-zinc-800 flex items-center justify-between">
               <span class="text-sm font-medium text-zinc-300">${name}</span>
               <span class="text-base font-bold text-amber-400">${formatMoney(val, isUsd ? 'USD' : 'ARS')}</span>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Renderizar Detalle Individual de Avance de Cuotas
+      const detailListEl = document.getElementById('installments-detail-list');
+      if (activeInstallmentItems.length === 0) {
+        detailListEl.innerHTML = `<p class="text-sm text-zinc-500">No hay consumos en cuotas registrados para este mes.</p>`;
+      } else {
+        activeInstallmentItems.sort((a, b) => b.displayAmount - a.displayAmount);
+        detailListEl.innerHTML = activeInstallmentItems.map(item => {
+          const progressPct = Math.round((item.currentQuota / item.installments) * 100);
+          return `
+            <div class="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/90 space-y-2.5">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">${item.entity}</span>
+                    <span class="text-sm font-medium text-zinc-100">${item.category}</span>
+                    ${item.note ? `<span class="text-xs text-zinc-400">• ${item.note}</span>` : ''}
+                  </div>
+                </div>
+                <div class="text-right">
+                  <span class="text-sm font-bold text-zinc-100">${formatMoney(item.displayAmount, item.currency)}</span>
+                  <span class="text-xs text-zinc-500 block">Total: ${formatMoney(item.amount, item.currency)}</span>
+                </div>
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs">
+                  <span class="text-zinc-400 font-medium">Avance: <strong class="text-zinc-200">${item.currentQuota}/${item.installments}</strong></span>
+                  <span class="text-zinc-500">${progressPct}% completado</span>
+                </div>
+                <div class="w-full h-2 bg-zinc-950 rounded-full overflow-hidden border border-zinc-800">
+                  <div class="bg-amber-400 h-full rounded-full transition-all duration-500" style="width: ${progressPct}%"></div>
+                </div>
+              </div>
             </div>
           `;
         }).join('');
