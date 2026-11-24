@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mis Finanzas | Control de Gastos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #09090b; color: #f4f4f5; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #18181b; }
+    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+    .glass-card { background: #121215; border: 1px solid #27272a; }
+    input, select { background-color: #18181b !important; border: 1px solid #27272a !important; color: #f4f4f5 !important; }
+    input:focus, select:focus { outline: none; border-color: #6366f1 !important; }
+  </style>
+</head>
+<body class="min-h-screen pb-20">
+
+  <!-- PANTALLA DE LOGIN / REGISTRO -->
+  <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4">
+    <div class="glass-card w-full max-w-md p-8 rounded-2xl shadow-2xl">
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight">Control de Gastos</h1>
+        <p class="text-sm text-zinc-400 mt-1">Ingresá o creá tu cuenta personal</p>
+      </div>
+
+      <form id="auth-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-zinc-400 mb-1">Correo electrónico</label>
+          <input type="email" id="auth-email" required placeholder="tu@correo.com" class="w-full px-3.5 py-2.5 rounded-xl text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-zinc-400 mb-1">Contraseña</label>
+          <input type="password" id="auth-password" required placeholder="Mínimo 6 caracteres" class="w-full px-3.5 py-2.5 rounded-xl text-sm">
+        </div>
+        <p id="auth-error" class="text-xs text-rose-400 hidden"></p>
+        <div class="pt-2 flex flex-col gap-2.5">
+          <button type="submit" id="btn-login" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-xl text-sm transition">Iniciar Sesión</button>
+          <button type="button" id="btn-register" class="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-medium py-2.5 rounded-xl text-sm transition">Crear Cuenta Nueva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- APLICACIÓN PRINCIPAL -->
+  <div id="app-screen" class="hidden max-w-5xl mx-auto px-4 pt-6">
+    
+    <!-- Header -->
+    <header class="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-zinc-800">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight">Mis Finanzas</h1>
+        <p id="user-email-display" class="text-xs text-zinc-400"></p>
+      </div>
+      
+      <div class="flex items-center gap-3">
+        <!-- Selector de Mes -->
+        <input type="month" id="month-selector" class="px-3 py-1.5 rounded-lg text-sm font-medium">
+        
+        <button id="btn-logout" class="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs text-zinc-400 hover:text-zinc-200 transition">
+          Salir
+        </button>
+      </div>
+    </header>
+
+    <!-- Navegación -->
+    <nav class="flex gap-2 my-6 overflow-x-auto pb-1">
+      <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-indigo-600 text-white">Resumen y Movimientos</button>
+      <button onclick="switchTab('new')" id="tab-new" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-zinc-900 text-zinc-400 hover:text-white">+ Cargar Movimiento</button>
+      <button onclick="switchTab('installments')" id="tab-installments" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-zinc-900 text-zinc-400 hover:text-white">Tarjetas y Cuotas</button>
+      <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-zinc-900 text-zinc-400 hover:text-white">Configurar Listas</button>
+    </nav>
+
+    <!-- VISTA 1: DASHBOARD -->
+    <section id="view-dashboard" class="space-y-6">
+      
+      <!-- Tarjetas de Saldo ARS y USD -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Bloque ARS -->
+        <div class="glass-card p-5 rounded-2xl space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Balance Pesos (ARS)</span>
+            <span class="px-2 py-0.5 text-xs rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ARS</span>
+          </div>
+          <div>
+            <p class="text-xs text-zinc-400">Saldo Disponible Líquido</p>
+            <p id="ars-balance" class="text-3xl font-bold tracking-tight mt-0.5">$ 0</p>
+          </div>
+          <div class="grid grid-cols-3 gap-2 pt-3 border-t border-zinc-800/80 text-xs">
+            <div>
+              <p class="text-zinc-500">Ingresos</p>
+              <p id="ars-income" class="font-semibold text-emerald-400 mt-0.5">$ 0</p>
+            </div>
+            <div>
+              <p class="text-zinc-500">Gastos Contado</p>
+              <p id="ars-cash-expense" class="font-semibold text-rose-400 mt-0.5">$ 0</p>
+            </div>
+            <div>
+              <p class="text-zinc-500">Tarjetas / Prést.</p>
+              <p id="ars-credit-due" class="font-semibold text-amber-400 mt-0.5">$ 0</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bloque USD -->
+        <div class="glass-card p-5 rounded-2xl space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Balance Dólares (USD)</span>
+            <span class="px-2 py-0.5 text-xs rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">USD</span>
+          </div>
+          <div>
+            <p class="text-xs text-zinc-400">Saldo Disponible Líquido</p>
+            <p id="usd-balance" class="text-3xl font-bold tracking-tight mt-0.5">US$ 0</p>
+          </div>
+          <div class="grid grid-cols-3 gap-2 pt-3 border-t border-zinc-800/80 text-xs">
+            <div>
+              <p class="text-zinc-500">Ingresos</p>
+              <p id="usd-income" class="font-semibold text-emerald-400 mt-0.5">US$ 0</p>
+            </div>
+            <div>
+              <p class="text-zinc-500">Gastos Contado</p>
+              <p id="usd-cash-expense" class="font-semibold text-rose-400 mt-0.5">US$ 0</p>
+            </div>
+            <div>
+              <p class="text-zinc-500">Tarjetas / Prést.</p>
+              <p id="usd-credit-due" class="font-semibold text-amber-400 mt-0.5">US$ 0</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Listado de Movimientos del Mes -->
+      <div class="glass-card rounded-2xl overflow-hidden">
+        <div class="p-5 border-b border-zinc-800 flex items-center justify-between">
+          <h2 class="font-semibold text-sm">Movimientos e Impacto del Mes Seleccionado</h2>
+          <button onclick="switchTab('new')" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium">+ Nuevo registro</button>
+        </div>
+        <div id="transactions-list" class="divide-y divide-zinc-800/70">
+          <p class="p-6 text-center text-sm text-zinc-500">Cargando movimientos...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- VISTA 2: NUEVO MOVIMIENTO -->
+    <section id="view-new" class="hidden max-w-xl mx-auto">
+      <div class="glass-card p-6 rounded-2xl">
+        <h2 class="text-lg font-semibold mb-5">Registrar Movimiento</h2>
+        
+        <form id="tx-form" class="space-y-4">
+          <!-- Tipo -->
+          <div class="grid grid-cols-2 gap-2 p-1 bg-zinc-900 rounded-xl border border-zinc-800">
+            <button type="button" id="type-expense" onclick="setTxType('expense')" class="py-2 rounded-lg text-sm font-medium bg-rose-500/20 text-rose-400 border border-rose-500/30">Egreso / Gasto</button>
+            <button type="button" id="type-income" onclick="setTxType('income')" class="py-2 rounded-lg text-sm font-medium text-zinc-400">Ingreso</button>
+          </div>
+          <input type="hidden" id="tx-type" value="expense">
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs text-zinc-400 mb-1">Moneda</label>
+              <select id="tx-currency" class="w-full px-3 py-2.5 rounded-xl text-sm">
+                <option value="ARS">Pesos (ARS)</option>
+                <option value="USD">Dólares (USD)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs text-zinc-400 mb-1">Monto Total</label>
+              <input type="number" step="0.01" id="tx-amount" required placeholder="0.00" class="w-full px-3 py-2.5 rounded-xl text-sm">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs text-zinc-400 mb-1">Categoría</label>
+              <select id="tx-category" required class="w-full px-3 py-2.5 rounded-xl text-sm"></select>
+            </div>
+            <div>
+              <label class="block text-xs text-zinc-400 mb-1">Fecha / Mes inicial</label>
+              <input type="date" id="tx-date" required class="w-full px-3 py-2.5 rounded-xl text-sm">
+            </div>
+          </div>
+
+          <!-- Medio de Pago (Solo Gastos) -->
+          <div id="expense-payment-fields" class="space-y-4 pt-2 border-t border-zinc-800/80">
+            <div>
+              <label class="block text-xs text-zinc-400 mb-1">Medio de Pago</label>
+              <select id="tx-payment-method" onchange="toggleInstallmentFields()" class="w-full px-3 py-2.5 rounded-xl text-sm">
+                <option value="cash">Efectivo / Débito / Transferencia (Descuenta hoy)</option>
+                <option value="card">Tarjeta de Crédito</option>
+                <option value="loan">Préstamo</option>
+              </select>
+            </div>
+
+            <div id="card-loan-details" class="hidden grid grid-cols-2 gap-4">
+              <div>
+                <label id="entity-label" class="block text-xs text-zinc-400 mb-1">Tarjeta</label>
+                <select id="tx-entity" class="w-full px-3 py-2.5 rounded-xl text-sm"></select>
+              </div>
+              <div>
+                <label class="block text-xs text-zinc-400 mb-1">Cantidad de Cuotas</label>
+                <input type="number" id="tx-installments" min="1" max="60" value="1" class="w-full px-3 py-2.5 rounded-xl text-sm">
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs text-zinc-400 mb-1">Descripción / Nota (Opcional)</label>
+            <input type="text" id="tx-note" placeholder="Ej: Compra semanal, Pelotas padel, etc." class="w-full px-3 py-2.5 rounded-xl text-sm">
+          </div>
+
+          <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl text-sm transition mt-2">
+            Guardar Movimiento
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- VISTA 3: DETALLE TARJETAS Y PRÉSTAMOS -->
+    <section id="view-installments" class="hidden space-y-6">
+      <div class="glass-card p-5 rounded-2xl">
+        <h2 class="font-semibold text-base mb-1">Desglose de Tarjetas y Préstamos del Mes</h2>
+        <p class="text-xs text-zinc-400 mb-5">Resumen de cuotas que vencen en el mes seleccionado arriba.</p>
+        <div id="cards-breakdown" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      </div>
+    </section>
+
+    <!-- VISTA 4: CONFIGURACIÓN DE LISTAS -->
+    <section id="view-settings" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Categorías Gastos -->
+      <div class="glass-card p-5 rounded-2xl space-y-3">
+        <h3 class="font-semibold text-sm">Categorías de Gastos</h3>
+        <div class="flex gap-2">
+          <input type="text" id="new-expenseCat" placeholder="Nueva categoría..." class="flex-1 px-3 py-2 rounded-xl text-xs">
+          <button onclick="addConfigItem('expenseCats', 'new-expenseCat')" class="px-3 py-2 bg-indigo-600 rounded-xl text-xs font-medium">Agregar</button>
+        </div>
+        <div id="list-expenseCats" class="flex flex-wrap gap-2 pt-2"></div>
+      </div>
+
+      <!-- Categorías Ingresos -->
+      <div class="glass-card p-5 rounded-2xl space-y-3">
+        <h3 class="font-semibold text-sm">Categorías de Ingresos</h3>
+        <div class="flex gap-2">
+          <input type="text" id="new-incomeCat" placeholder="Nueva categoría..." class="flex-1 px-3 py-2 rounded-xl text-xs">
+          <button onclick="addConfigItem('incomeCats', 'new-incomeCat')" class="px-3 py-2 bg-indigo-600 rounded-xl text-xs font-medium">Agregar</button>
+        </div>
+        <div id="list-incomeCats" class="flex flex-wrap gap-2 pt-2"></div>
+      </div>
+
+      <!-- Tarjetas -->
+      <div class="glass-card p-5 rounded-2xl space-y-3">
+        <h3 class="font-semibold text-sm">Tarjetas de Crédito</h3>
+        <div class="flex gap-2">
+          <input type="text" id="new-card" placeholder="Nueva tarjeta..." class="flex-1 px-3 py-2 rounded-xl text-xs">
+          <button onclick="addConfigItem('cards', 'new-card')" class="px-3 py-2 bg-indigo-600 rounded-xl text-xs font-medium">Agregar</button>
+        </div>
+        <div id="list-cards" class="flex flex-wrap gap-2 pt-2"></div>
+      </div>
+
+      <!-- Préstamos -->
+      <div class="glass-card p-5 rounded-2xl space-y-3">
+        <h3 class="font-semibold text-sm">Entidades de Préstamos</h3>
+        <div class="flex gap-2">
+          <input type="text" id="new-loan" placeholder="Nueva entidad..." class="flex-1 px-3 py-2 rounded-xl text-xs">
+          <button onclick="addConfigItem('loans', 'new-loan')" class="px-3 py-2 bg-indigo-600 rounded-xl text-xs font-medium">Agregar</button>
+        </div>
+        <div id="list-loans" class="flex flex-wrap gap-2 pt-2"></div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- FIREBASE SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, collection, addDoc, onSnapshot, deleteDoc, query } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDfqeDatx98CU5y9BXy6gHYNC97MKgVbMM",
+      authDomain: "gastoscaco-4008d.firebaseapp.com",
+      projectId: "gastoscaco-4008d",
+      storageBucket: "gastoscaco-4008d.firebasestorage.app",
+      messagingSenderId: "1005331331614",
+      appId: "1:1005331331614:web:589d28ec42188234168c0f",
+      measurementId: "G-8NBF418YCN"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    let userConfig = {
+      incomeCats: ["Sueldo", "Comisiones", "Otros"],
+      expenseCats: ["Supermercado", "Comida", "Salida/Juntada", "Auto", "Servicios", "Salud", "Ropa", "Hogar", "Padel"],
+      cards: ["Visa", "Mastercard", "MercadoPago", "AMEX"],
+      loans: ["MercadoPago", "BNA", "Santander", "Otros"]
+    };
+    let allTransactions = [];
+
+    // Inicializar fecha y mes actual
+    const today = new Date();
+    const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    document.getElementById('month-selector').value = currentMonthStr;
+    document.getElementById('tx-date').value = today.toISOString().split('T')[0];
+
+    document.getElementById('month-selector').addEventListener('change', renderDashboard);
+
+    // AUTHENTICATION
+    const authForm = document.getElementById('auth-form');
+    const authError = document.getElementById('auth-error');
+
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      authError.classList.add('hidden');
+      const email = document.getElementById('auth-email').value;
+      const pass = document.getElementById('auth-password').value;
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+      } catch (err) {
+        authError.textContent = "Error al iniciar sesión. Verificá correo y contraseña.";
+        authError.classList.remove('hidden');
+      }
+    });
+
+    document.getElementById('btn-register').addEventListener('click', async () => {
+      authError.classList.add('hidden');
+      const email = document.getElementById('auth-email').value;
+      const pass = document.getElementById('auth-password').value;
+      if (!email || pass.length < 6) {
+        authError.textContent = "Ingresá un correo válido y una contraseña de al menos 6 caracteres.";
+        authError.classList.remove('hidden');
+        return;
+      }
+      try {
+        await createUserWithEmailAndPassword(auth, email, pass);
+      } catch (err) {
+        authError.textContent = "No se pudo crear la cuenta (quizás el correo ya está registrado).";
+        authError.classList.remove('hidden');
+      }
+    });
+
+    document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('app-screen').classList.remove('hidden');
+        document.getElementById('user-email-display').textContent = user.email;
+        await loadOrInitUserConfig();
+        listenTransactions();
+      } else {
+        currentUser = null;
+        document.getElementById('auth-screen').classList.remove('hidden');
+        document.getElementById('app-screen').classList.add('hidden');
+      }
+    });
+
+    // CONFIGURACIÓN DE USUARIO
+    async function loadOrInitUserConfig() {
+      const configRef = doc(db, "users", currentUser.uid, "settings", "lists");
+      const snap = await getDoc(configRef);
+      if (snap.exists()) {
+        userConfig = snap.data();
+      } else {
+        await setDoc(configRef, userConfig);
+      }
+      renderConfigUI();
+      populateFormSelects();
+    }
+
+    window.addConfigItem = async (key, inputId) => {
+      const input = document.getElementById(inputId);
+      const val = input.value.trim();
+      if (!val || userConfig[key].includes(val)) return;
+      userConfig[key].push(val);
+      input.value = '';
+      await setDoc(doc(db, "users", currentUser.uid, "settings", "lists"), userConfig);
+      renderConfigUI();
+      populateFormSelects();
+    };
+
+    window.removeConfigItem = async (key, val) => {
+      userConfig[key] = userConfig[key].filter(item => item !== val);
+      await setDoc(doc(db, "users", currentUser.uid, "settings", "lists"), userConfig);
+      renderConfigUI();
+      populateFormSelects();
+    };
+
+    function renderConfigUI() {
+      ['expenseCats', 'incomeCats', 'cards', 'loans'].forEach(key => {
+        const container = document.getElementById(`list-${key}`);
+        container.innerHTML = userConfig[key].map(item => `
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800 text-xs text-zinc-200 border border-zinc-700">
+            ${item}
+            <button onclick="removeConfigItem('${key}', '${item}')" class="text-zinc-400 hover:text-rose-400 font-bold">&times;</button>
+          </span>
+        `).join('');
+      });
+    }
+
+    // FORMULARIO DE MOVIMIENTOS
+    window.setTxType = (type) => {
+      document.getElementById('tx-type').value = type;
+      const btnExp = document.getElementById('type-expense');
+      const btnInc = document.getElementById('type-income');
+      const payFields = document.getElementById('expense-payment-fields');
+
+      if (type === 'expense') {
+        btnExp.className = "py-2 rounded-lg text-sm font-medium bg-rose-500/20 text-rose-400 border border-rose-500/30";
+        btnInc.className = "py-2 rounded-lg text-sm font-medium text-zinc-400";
+        payFields.classList.remove('hidden');
+      } else {
+        btnInc.className = "py-2 rounded-lg text-sm font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+        btnExp.className = "py-2 rounded-lg text-sm font-medium text-zinc-400";
+        payFields.classList.add('hidden');
+      }
+      populateFormSelects();
+    };
+
+    window.toggleInstallmentFields = () => {
+      const method = document.getElementById('tx-payment-method').value;
+      const details = document.getElementById('card-loan-details');
+      const label = document.getElementById('entity-label');
+      if (method === 'cash') {
+        details.classList.add('hidden');
+      } else {
+        details.classList.remove('hidden');
+        label.textContent = method === 'card' ? 'Tarjeta' : 'Préstamo';
+        populateEntitySelect(method);
+      }
+    };
+
+    function populateEntitySelect(method) {
+      const select = document.getElementById('tx-entity');
+      const list = method === 'card' ? userConfig.cards : userConfig.loans;
+      select.innerHTML = list.map(i => `<option value="${i}">${i}</option>`).join('');
+    }
+
+    function populateFormSelects() {
+      const type = document.getElementById('tx-type').value;
+      const catSelect = document.getElementById('tx-category');
+      const list = type === 'expense' ? userConfig.expenseCats : userConfig.incomeCats;
+      catSelect.innerHTML = list.map(c => `<option value="${c}">${c}</option>`).join('');
+      
+      const method = document.getElementById('tx-payment-method').value;
+      if (method !== 'cash') populateEntitySelect(method);
+    }
+
+    document.getElementById('tx-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const type = document.getElementById('tx-type').value;
+      const currency = document.getElementById('tx-currency').value;
+      const amount = parseFloat(document.getElementById('tx-amount').value);
+      const category = document.getElementById('tx-category').value;
+      const date = document.getElementById('tx-date').value;
+      const note = document.getElementById('tx-note').value.trim();
+
+      let paymentMethod = 'cash';
+      let entity = '';
+      let installments = 1;
+
+      if (type === 'expense') {
+        paymentMethod = document.getElementById('tx-payment-method').value;
+        if (paymentMethod !== 'cash') {
+          entity = document.getElementById('tx-entity').value;
+          installments = parseInt(document.getElementById('tx-installments').value) || 1;
+        }
+      }
+
+      await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
+        type, currency, amount, category, date, note, paymentMethod, entity, installments,
+        createdAt: Date.now()
+      });
+
+      document.getElementById('tx-amount').value = '';
+      document.getElementById('tx-note').value = '';
+      document.getElementById('tx-installments').value = '1';
+      switchTab('dashboard');
+    });
+
+    // ESCUCHAR DATOS EN TIEMPO REAL
+    function listenTransactions() {
+      const q = query(collection(db, "users", currentUser.uid, "transactions"));
+      onSnapshot(q, (snapshot) => {
+        allTransactions = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderDashboard();
+      });
+    }
+
+    window.deleteTx = async (id) => {
+      if (!confirm("¿Eliminar este registro completo (incluyendo todas sus cuotas)?")) return;
+      await deleteDoc(doc(db, "users", currentUser.uid, "transactions", id));
+    };
+
+    // CÁLCULO DE CUOTAS Y RENDERIZADO
+    function getMonthDiff(startDateStr, targetMonthStr) {
+      const [sYear, sMonth] = startDateStr.split('-').map(Number);
+      const [tYear, tMonth] = targetMonthStr.split('-').map(Number);
+      return (tYear - sYear) * 12 + (tMonth - sMonth);
+    }
+
+    function formatMoney(num, curr) {
+      const prefix = curr === 'USD' ? 'US$ ' : '$ ';
+      return prefix + num.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    }
+
+    function renderDashboard() {
+      const selectedMonth = document.getElementById('month-selector').value;
+      
+      let totals = {
+        ARS: { income: 0, cashExp: 0, creditDue: 0 },
+        USD: { income: 0, cashExp: 0, creditDue: 0 }
+      };
+
+      let activeItems = [];
+      let entitySummary = {};
+
+      allTransactions.forEach(tx => {
+        const diff = getMonthDiff(tx.date, selectedMonth);
+
+        if (tx.type === 'income' && diff === 0) {
+          totals[tx.currency].income += tx.amount;
+          activeItems.push({ ...tx, displayAmount: tx.amount, cuotaInfo: null });
+        } 
+        else if (tx.type === 'expense') {
+          if (tx.paymentMethod === 'cash' && diff === 0) {
+            totals[tx.currency].cashExp += tx.amount;
+            activeItems.push({ ...tx, displayAmount: tx.amount, cuotaInfo: 'Contado / Débito' });
+          } 
+          else if (tx.paymentMethod !== 'cash' && diff >= 0 && diff < tx.installments) {
+            const quotaAmount = tx.amount / tx.installments;
+            totals[tx.currency].creditDue += quotaAmount;
+            const currentQuota = diff + 1;
+            activeItems.push({ 
+              ...tx, 
+              displayAmount: quotaAmount, 
+              cuotaInfo: `${tx.entity} • Cuota ${currentQuota}/${tx.installments}` 
+            });
+
+            const groupKey = `${tx.paymentMethod === 'card' ? 'Tarjeta' : 'Préstamo'}: ${tx.entity} (${tx.currency})`;
+            entitySummary[groupKey] = (entitySummary[groupKey] || 0) + quotaAmount;
+          }
+        }
+      });
+
+      // Actualizar tarjetas superiores
+      ['ARS', 'USD'].forEach(curr => {
+        const t = totals[curr];
+        const balance = t.income - t.cashExp - t.creditDue;
+        const lower = curr.toLowerCase();
+        
+        const balEl = document.getElementById(`${lower}-balance`);
+        balEl.textContent = formatMoney(balance, curr);
+        balEl.className = `text-3xl font-bold tracking-tight mt-0.5 ${balance >= 0 ? 'text-white' : 'text-rose-400'}`;
+
+        document.getElementById(`${lower}-income`).textContent = formatMoney(t.income, curr);
+        document.getElementById(`${lower}-cash-expense`).textContent = formatMoney(t.cashExp, curr);
+        document.getElementById(`${lower}-credit-due`).textContent = formatMoney(t.creditDue, curr);
+      });
+
+      // Renderizar lista de movimientos
+      const listEl = document.getElementById('transactions-list');
+      if (activeItems.length === 0) {
+        listEl.innerHTML = `<p class="p-8 text-center text-sm text-zinc-500">No hay movimientos registrados para este mes.</p>`;
+      } else {
+        activeItems.sort((a, b) => b.createdAt - a.createdAt);
+        listEl.innerHTML = activeItems.map(item => `
+          <div class="p-4 flex items-center justify-between gap-4 hover:bg-zinc-900/40 transition">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-sm text-zinc-100 truncate">${item.category}</span>
+                ${item.cuotaInfo ? `<span class="text-[11px] px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-300 border border-zinc-700">${item.cuotaInfo}</span>` : ''}
+              </div>
+              <p class="text-xs text-zinc-500 mt-0.5 truncate">${item.note || item.date}</p>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <span class="font-semibold text-sm ${item.type === 'income' ? 'text-emerald-400' : 'text-zinc-200'}">
+                ${item.type === 'income' ? '+' : '-'} ${formatMoney(item.displayAmount, item.currency)}
+              </span>
+              <button onclick="deleteTx('${item.id}')" title="Eliminar" class="text-zinc-600 hover:text-rose-400 text-sm px-1">&times;</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Renderizar pestaña Tarjetas y Préstamos
+      const breakdownEl = document.getElementById('cards-breakdown');
+      const entries = Object.entries(entitySummary);
+      if (entries.length === 0) {
+        breakdownEl.innerHTML = `<p class="text-sm text-zinc-500 col-span-2">No tenés cuotas de tarjetas ni préstamos activos este mes.</p>`;
+      } else {
+        breakdownEl.innerHTML = entries.map(([name, val]) => {
+          const isUsd = name.includes('(USD)');
+          return `
+            <div class="p-4 rounded-xl bg-zinc-900/70 border border-zinc-800 flex items-center justify-between">
+              <span class="text-sm font-medium text-zinc-300">${name}</span>
+              <span class="text-base font-bold text-amber-400">${formatMoney(val, isUsd ? 'USD' : 'ARS')}</span>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // NAVEGACIÓN DE PESTAÑAS
+    window.switchTab = (tabName) => {
+      ['dashboard', 'new', 'installments', 'settings'].forEach(t => {
+        document.getElementById(`view-${t}`).classList.add('hidden');
+        const btn = document.getElementById(`tab-${t}`);
+        btn.className = "tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-zinc-900 text-zinc-400 hover:text-white transition";
+      });
+      document.getElementById(`view-${tabName}`).classList.remove('hidden');
+      document.getElementById(`tab-${tabName}`).className = "tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-indigo-600 text-white transition";
+    };
+  </script>
+</body>
+</html>
