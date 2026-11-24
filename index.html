@@ -8,13 +8,46 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Inter', sans-serif; background-color: #09090b; color: #f4f4f5; }
+    :root {
+      --bg-main: #141210;
+      --bg-card: #1e1b18;
+      --bg-input: #26221e;
+      --border-subtle: #36302a;
+      --text-primary: #f5efe6;
+      --text-secondary: #b5aca2;
+      --accent-sand: #d4b996;
+      --accent-sand-hover: #e2c9a6;
+      --accent-sand-text: #1c1814;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+    }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #18181b; }
-    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
-    .glass-card { background: #121215; border: 1px solid #27272a; }
-    input, select { background-color: #18181b !important; border: 1px solid #27272a !important; color: #f4f4f5 !important; }
-    input:focus, select:focus { outline: none; border-color: #6366f1 !important; }
+    ::-webkit-scrollbar-track { background: #1a1714; }
+    ::-webkit-scrollbar-thumb { background: #443d35; border-radius: 3px; }
+    .glass-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+    }
+    input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="date"], input[type="month"], select {
+      background-color: var(--bg-input) !important;
+      border: 1px solid #3f3831 !important;
+      color: var(--text-primary) !important;
+      color-scheme: dark;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent-sand) !important;
+    }
+    .btn-sand {
+      background-color: var(--accent-sand);
+      color: var(--accent-sand-text);
+    }
+    .btn-sand:hover {
+      background-color: var(--accent-sand-hover);
+    }
   </style>
 </head>
 <body class="min-h-screen pb-20">
@@ -27,7 +60,7 @@
       <div class="flex-1 text-center md:text-right hidden md:block">
         <div class="relative inline-block">
           <img src="caricatura.png" alt="Inspector de Gastos" class="w-72 h-auto mx-auto transform -rotate-3 hover:rotate-0 transition duration-300">
-          <div class="absolute -bottom-2 -right-2 bg-indigo-600 text-xs font-semibold px-3 py-1 rounded-full shadow-lg border border-indigo-500 transform rotate-6">
+          <div class="absolute -bottom-2 -right-2 btn-sand text-xs font-semibold px-3 py-1 rounded-full shadow-lg border border-[#e5cfa8] transform rotate-6">
             ¡Controlando gastos! 🧐🐶
           </div>
         </div>
@@ -40,28 +73,28 @@
         </div>
 
         <div class="text-center mb-6">
-          <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-3">
+          <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-[#d4b996]/15 text-[#d4b996] border border-[#d4b996]/30 mb-3">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
           </div>
-          <h1 class="text-2xl font-bold tracking-tight">Control de Gastos</h1>
-          <p class="text-sm text-zinc-400 mt-1">Ingresá o creá tu cuenta personal</p>
+          <h1 class="text-2xl font-bold tracking-tight text-[#f5efe6]">Control de Gastos</h1>
+          <p class="text-sm text-[#b5aca2] mt-1">Ingresá o creá tu cuenta personal</p>
         </div>
 
         <form id="auth-form" class="space-y-4">
           <div>
-            <label class="block text-xs font-medium text-zinc-400 mb-1">Correo electrónico</label>
+            <label class="block text-xs font-medium text-[#c7beb4] mb-1">Correo electrónico</label>
             <input type="email" id="auth-email" required placeholder="tu@correo.com" class="w-full px-3.5 py-2.5 rounded-xl text-sm">
           </div>
           <div>
-            <label class="block text-xs font-medium text-zinc-400 mb-1">Contraseña</label>
+            <label class="block text-xs font-medium text-[#c7beb4] mb-1">Contraseña</label>
             <input type="password" id="auth-password" required placeholder="Mínimo 6 caracteres" class="w-full px-3.5 py-2.5 rounded-xl text-sm">
           </div>
-          <p id="auth-error" class="text-xs text-rose-400 hidden bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg"></p>
-          <p id="auth-info" class="text-xs text-emerald-400 hidden bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-lg"></p>
+          <p id="auth-error" class="text-xs text-[#e5988e] hidden bg-[#d98276]/15 border border-[#d98276]/30 p-2.5 rounded-lg"></p>
+          <p id="auth-info" class="text-xs text-[#9ec4a5] hidden bg-[#86b08e]/15 border border-[#86b08e]/30 p-2.5 rounded-lg"></p>
           <div class="pt-2 flex flex-col gap-2.5">
-            <button type="submit" id="btn-login" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-xl text-sm transition">Iniciar Sesión</button>
-            <button type="button" id="btn-register" class="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-medium py-2.5 rounded-xl text-sm transition">Crear Cuenta Nueva</button>
-            <button type="button" id="btn-reset-pass" class="text-xs text-zinc-400 hover:text-indigo-400 pt-1 transition">¿Olvidaste tu contraseña? Restablecer por correo</button>
+            <button type="submit" id="btn-login" class="w-full btn-sand font-semibold py-2.5 rounded-xl text-sm transition">Iniciar Sesión</button>
+            <button type="button" id="btn-register" class="w-full bg-[#2a2520] hover:bg-[#352f28] text-[#f5efe6] border border-[#3f3831] font-medium py-2.5 rounded-xl text-sm transition">Crear Cuenta Nueva</button>
+            <button type="button" id="btn-reset-pass" class="text-xs text-[#b5aca2] hover:text-[#d4b996] pt-1 transition">¿Olvidaste tu contraseña? Restablecer por correo</button>
           </div>
         </form>
       </div>
@@ -73,21 +106,25 @@
   <div id="app-screen" class="hidden max-w-5xl mx-auto px-4 pt-6">
     
     <!-- Header -->
-    <header class="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-zinc-800">
+    <header class="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-[#36302a]">
       <div class="flex items-center gap-4">
         <div class="relative">
-          <img src="caricatura.png" alt="Avatar" class="w-12 h-12 rounded-xl border border-zinc-800 bg-zinc-900 object-contain p-0.5">
-          <span class="absolute -bottom-1 -right-1 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span></span>
+          <img src="caricatura.png" alt="Avatar" class="w-12 h-12 rounded-xl border border-[#3f3831] bg-[#26221e] object-contain p-0.5">
+          <span class="absolute -bottom-1 -right-1 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#86b08e] opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-[#86b08e]"></span></span>
         </div>
         <div>
-          <h1 class="text-xl font-bold tracking-tight">Mis Finanzas</h1>
-          <p id="user-email-display" class="text-xs text-zinc-400"></p>
+          <h1 class="text-xl font-bold tracking-tight text-[#f5efe6]">Mis Finanzas</h1>
+          <p id="user-email-display" class="text-xs text-[#b5aca2]"></p>
         </div>
       </div>
       
       <div class="flex items-center gap-3">
-        <input type="month" id="month-selector" class="px-3 py-1.5 rounded-lg text-sm font-medium">
-        <button id="btn-logout" class="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs text-zinc-400 hover:text-zinc-200 transition">
+        <div class="flex items-center gap-1.5">
+          <button onclick="stepMonth(-1)" title="Mes anterior" class="px-2.5 py-1.5 rounded-lg bg-[#26221e] hover:bg-[#332d27] border border-[#3f3831] text-xs text-[#f5efe6]">&larr;</button>
+          <input type="month" id="month-selector" class="px-3 py-1.5 rounded-lg text-sm font-medium">
+          <button onclick="stepMonth(1)" title="Mes siguiente" class="px-2.5 py-1.5 rounded-lg bg-[#26221e] hover:bg-[#332d27] border border-[#3f3831] text-xs text-[#f5efe6]">&rarr;</button>
+        </div>
+        <button id="btn-logout" class="px-3 py-1.5 rounded-lg bg-[#26221e] hover:bg-[#332d27] border border-[#3f3831] text-xs text-[#c7beb4] hover:text-[#f5efe6] transition">
           Salir
         </button>
       </div>
@@ -95,10 +132,10 @@
 
     <!-- Navegación -->
     <nav class="flex gap-2 my-6 overflow-x-auto pb-1">
-      <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-indigo-600 text-white">Resumen y Movimientos</button>
-      <button onclick="switchTab('new')" id="tab-new" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-zinc-900 text-zinc-400 hover:text-white">+ Cargar Movimiento</button>
-      <button onclick="switchTab('installments')" id="tab-installments" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-zinc-900 text-zinc-400 hover:text-white">Tarjetas y Cuotas</button>
-      <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-zinc-900 text-zinc-400 hover:text-white">Configurar Listas</button>
+      <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn px-4 py-2 rounded-xl text-sm font-semibold btn-sand">Resumen y Movimientos</button>
+      <button onclick="switchTab('new')" id="tab-new" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-[#1e1b18] border border-[#36302a] text-[#c7beb4] hover:text-[#f5efe6]">+ Cargar Movimiento</button>
+      <button onclick="switchTab('installments')" id="tab-installments" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-[#1e1b18] border border-[#36302a] text-[#c7beb4] hover:text-[#f5efe6]">Tarjetas y Cuotas</button>
+      <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-[#1e1b18] border border-[#36302a] text-[#c7beb4] hover:text-[#f5efe6]">Configurar Listas</button>
     </nav>
 
     <!-- VISTA 1: DASHBOARD -->
@@ -108,50 +145,50 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="glass-card p-5 rounded-2xl space-y-4">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Balance Pesos (ARS)</span>
-            <span class="px-2 py-0.5 text-xs rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ARS</span>
+            <span class="text-xs font-semibold uppercase tracking-wider text-[#b5aca2]">Balance Pesos (ARS)</span>
+            <span class="px-2 py-0.5 text-xs font-medium rounded-md bg-[#86b08e]/15 text-[#9ec4a5] border border-[#86b08e]/30">ARS</span>
           </div>
           <div>
-            <p class="text-xs text-zinc-400">Saldo Disponible Líquido</p>
-            <p id="ars-balance" class="text-3xl font-bold tracking-tight mt-0.5">$ 0</p>
+            <p class="text-xs text-[#b5aca2]">Saldo Disponible Líquido</p>
+            <p id="ars-balance" class="text-3xl font-bold tracking-tight mt-0.5 text-[#f5efe6]">$ 0</p>
           </div>
-          <div class="grid grid-cols-3 gap-2 pt-3 border-t border-zinc-800/80 text-xs">
+          <div class="grid grid-cols-3 gap-2 pt-3 border-t border-[#36302a] text-xs">
             <div>
-              <p class="text-zinc-500">Ingresos</p>
-              <p id="ars-income" class="font-semibold text-emerald-400 mt-0.5">$ 0</p>
+              <p class="text-[#9e958b]">Ingresos</p>
+              <p id="ars-income" class="font-semibold text-[#9ec4a5] mt-0.5">$ 0</p>
             </div>
             <div>
-              <p class="text-zinc-500">Gastos Contado</p>
-              <p id="ars-cash-expense" class="font-semibold text-rose-400 mt-0.5">$ 0</p>
+              <p class="text-[#9e958b]">Contado / Fijos</p>
+              <p id="ars-cash-expense" class="font-semibold text-[#e5988e] mt-0.5">$ 0</p>
             </div>
             <div>
-              <p class="text-zinc-500">Tarjetas / Prést.</p>
-              <p id="ars-credit-due" class="font-semibold text-amber-400 mt-0.5">$ 0</p>
+              <p class="text-[#9e958b]">Tarjetas / Prést.</p>
+              <p id="ars-credit-due" class="font-semibold text-[#e3c08d] mt-0.5">$ 0</p>
             </div>
           </div>
         </div>
 
         <div class="glass-card p-5 rounded-2xl space-y-4">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Balance Dólares (USD)</span>
-            <span class="px-2 py-0.5 text-xs rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">USD</span>
+            <span class="text-xs font-semibold uppercase tracking-wider text-[#b5aca2]">Balance Dólares (USD)</span>
+            <span class="px-2 py-0.5 text-xs font-medium rounded-md bg-[#d4b996]/15 text-[#d4b996] border border-[#d4b996]/30">USD</span>
           </div>
           <div>
-            <p class="text-xs text-zinc-400">Saldo Disponible Líquido</p>
-            <p id="usd-balance" class="text-3xl font-bold tracking-tight mt-0.5">US$ 0</p>
+            <p class="text-xs text-[#b5aca2]">Saldo Disponible Líquido</p>
+            <p id="usd-balance" class="text-3xl font-bold tracking-tight mt-0.5 text-[#f5efe6]">US$ 0</p>
           </div>
-          <div class="grid grid-cols-3 gap-2 pt-3 border-t border-zinc-800/80 text-xs">
+          <div class="grid grid-cols-3 gap-2 pt-3 border-t border-[#36302a] text-xs">
             <div>
-              <p class="text-zinc-500">Ingresos</p>
-              <p id="usd-income" class="font-semibold text-emerald-400 mt-0.5">US$ 0</p>
+              <p class="text-[#9e958b]">Ingresos</p>
+              <p id="usd-income" class="font-semibold text-[#9ec4a5] mt-0.5">US$ 0</p>
             </div>
             <div>
-              <p class="text-zinc-500">Gastos Contado</p>
-              <p id="usd-cash-expense" class="font-semibold text-rose-400 mt-0.5">US$ 0</p>
+              <p class="text-[#9e958b]">Contado / Fijos</p>
+              <p id="usd-cash-expense" class="font-semibold text-[#e5988e] mt-0.5">US$ 0</p>
             </div>
             <div>
-              <p class="text-zinc-500">Tarjetas / Prést.</p>
-              <p id="usd-credit-due" class="font-semibold text-amber-400 mt-0.5">US$ 0</p>
+              <p class="text-[#9e958b]">Tarjetas / Prést.</p>
+              <p id="usd-credit-due" class="font-semibold text-[#e3c08d] mt-0.5">US$ 0</p>
             </div>
           </div>
         </div>
@@ -159,47 +196,47 @@
 
       <!-- Listado de Movimientos del Mes -->
       <div class="glass-card rounded-2xl overflow-hidden">
-        <div class="p-5 border-b border-zinc-800 flex items-center justify-between">
-          <h2 class="font-semibold text-sm">Movimientos e Impacto del Mes Seleccionado</h2>
-          <button onclick="openNewForm()" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium">+ Nuevo registro</button>
+        <div class="p-5 border-b border-[#36302a] flex items-center justify-between">
+          <h2 class="font-semibold text-sm text-[#f5efe6]">Movimientos e Impacto del Mes Seleccionado</h2>
+          <button onclick="openNewForm()" class="text-xs text-[#d4b996] hover:text-[#e6cfb0] font-semibold">+ Nuevo registro</button>
         </div>
-        <div id="transactions-list" class="divide-y divide-zinc-800/70">
-          <p class="p-6 text-center text-sm text-zinc-500">Cargando movimientos...</p>
+        <div id="transactions-list" class="divide-y divide-[#2d2823]">
+          <p class="p-6 text-center text-sm text-[#9e958b]">Cargando movimientos...</p>
         </div>
       </div>
 
       <!-- Gráfico de Gastos por Categoría -->
       <div class="glass-card p-5 rounded-2xl space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 pb-3">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#36302a] pb-3">
           <div>
-            <h2 class="font-semibold text-sm">Distribución de Gastos por Categoría</h2>
-            <p class="text-xs text-zinc-400">Ordenado de mayor a menor impacto en el mes seleccionado</p>
+            <h2 class="font-semibold text-sm text-[#f5efe6]">Distribución de Gastos por Categoría</h2>
+            <p class="text-xs text-[#b5aca2]">Ordenado de mayor a menor impacto en el mes seleccionado</p>
           </div>
-          <div class="flex gap-1.5 bg-zinc-900 p-1 rounded-lg border border-zinc-800">
-            <button onclick="setChartCurrency('ARS')" id="chart-btn-ars" class="px-2.5 py-1 rounded text-xs font-medium bg-indigo-600 text-white">ARS</button>
-            <button onclick="setChartCurrency('USD')" id="chart-btn-usd" class="px-2.5 py-1 rounded text-xs font-medium text-zinc-400 hover:text-white">USD</button>
+          <div class="flex gap-1.5 bg-[#141210] p-1 rounded-lg border border-[#36302a]">
+            <button onclick="setChartCurrency('ARS')" id="chart-btn-ars" class="px-2.5 py-1 rounded text-xs font-semibold btn-sand">ARS</button>
+            <button onclick="setChartCurrency('USD')" id="chart-btn-usd" class="px-2.5 py-1 rounded text-xs font-medium text-[#b5aca2] hover:text-[#f5efe6]">USD</button>
           </div>
         </div>
         <div id="category-chart" class="space-y-3.5 pt-1">
-          <p class="text-center text-sm text-zinc-500 py-4">Sin gastos registrados en este mes.</p>
+          <p class="text-center text-sm text-[#9e958b] py-4">Sin gastos registrados en este mes.</p>
         </div>
       </div>
 
       <!-- Curva de Proyección -->
       <div class="glass-card p-5 rounded-2xl space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 pb-3">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#36302a] pb-3">
           <div>
-            <h2 class="font-semibold text-sm">Curva de Proyección</h2>
-            <p class="text-xs text-zinc-400">Evolución de cuotas comprometidas vs. ingresos y gastos totales proyectados</p>
+            <h2 class="font-semibold text-sm text-[#f5efe6]">Curva de Proyección</h2>
+            <p class="text-xs text-[#b5aca2]">Evolución de cuotas comprometidas vs. ingresos y gastos totales proyectados</p>
           </div>
           <div class="flex items-center gap-2">
             <select id="projection-horizon" onchange="renderDashboard()" class="px-2.5 py-1 rounded-lg text-xs">
               <option value="6">6 meses</option>
               <option value="12">12 meses</option>
             </select>
-            <div class="flex gap-1.5 bg-zinc-900 p-1 rounded-lg border border-zinc-800">
-              <button onclick="setProjCurrency('ARS')" id="proj-btn-ars" class="px-2.5 py-1 rounded text-xs font-medium bg-indigo-600 text-white">ARS</button>
-              <button onclick="setProjCurrency('USD')" id="proj-btn-usd" class="px-2.5 py-1 rounded text-xs font-medium text-zinc-400 hover:text-white">USD</button>
+            <div class="flex gap-1.5 bg-[#141210] p-1 rounded-lg border border-[#36302a]">
+              <button onclick="setProjCurrency('ARS')" id="proj-btn-ars" class="px-2.5 py-1 rounded text-xs font-semibold btn-sand">ARS</button>
+              <button onclick="setProjCurrency('USD')" id="proj-btn-usd" class="px-2.5 py-1 rounded text-xs font-medium text-[#b5aca2] hover:text-[#f5efe6]">USD</button>
             </div>
           </div>
         </div>
@@ -217,49 +254,70 @@
     <section id="view-new" class="hidden max-w-xl mx-auto">
       <div class="glass-card p-6 rounded-2xl">
         <div class="flex items-center justify-between mb-5">
-          <h2 id="form-title" class="text-lg font-semibold">Registrar Movimiento</h2>
-          <button type="button" id="btn-cancel-edit" onclick="cancelEdit()" class="hidden text-xs text-zinc-400 hover:text-white">Cancelar edición</button>
+          <h2 id="form-title" class="text-lg font-semibold text-[#f5efe6]">Registrar Movimiento</h2>
+          <button type="button" id="btn-cancel-edit" onclick="cancelEdit()" class="hidden text-xs text-[#b5aca2] hover:text-[#f5efe6]">Cancelar edición</button>
+        </div>
+
+        <!-- Aviso de actualización de recurrente -->
+        <div id="recurring-split-notice" class="hidden mb-4 p-3 rounded-xl bg-[#d4b996]/15 border border-[#d4b996]/35 text-xs text-[#ebd7bc]">
+          Estás modificando este movimiento fijo desde <strong id="split-month-label"></strong> en adelante. Los meses anteriores conservarán el valor original.
         </div>
         
         <form id="tx-form" class="space-y-4">
           <input type="hidden" id="edit-tx-id" value="">
+          <input type="hidden" id="edit-split-month" value="">
 
-          <div class="grid grid-cols-2 gap-2 p-1 bg-zinc-900 rounded-xl border border-zinc-800">
-            <button type="button" id="type-expense" onclick="setTxType('expense')" class="py-2 rounded-lg text-sm font-medium bg-rose-500/20 text-rose-400 border border-rose-500/30">Egreso / Gasto</button>
-            <button type="button" id="type-income" onclick="setTxType('income')" class="py-2 rounded-lg text-sm font-medium text-zinc-400">Ingreso</button>
+          <div class="grid grid-cols-2 gap-2 p-1 bg-[#141210] rounded-xl border border-[#36302a]">
+            <button type="button" id="type-expense" onclick="setTxType('expense')" class="py-2 rounded-lg text-sm font-medium bg-[#d98276]/20 text-[#e5988e] border border-[#d98276]/35">Egreso / Gasto</button>
+            <button type="button" id="type-income" onclick="setTxType('income')" class="py-2 rounded-lg text-sm font-medium text-[#b5aca2]">Ingreso</button>
           </div>
           <input type="hidden" id="tx-type" value="expense">
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs text-zinc-400 mb-1">Moneda</label>
+              <label class="block text-xs text-[#c7beb4] mb-1">Moneda</label>
               <select id="tx-currency" class="w-full px-3 py-2.5 rounded-xl text-sm">
                 <option value="ARS">Pesos (ARS)</option>
                 <option value="USD">Dólares (USD)</option>
               </select>
             </div>
             <div>
-              <label class="block text-xs text-zinc-400 mb-1">Monto Total</label>
+              <label class="block text-xs text-[#c7beb4] mb-1">Monto Total</label>
               <input type="number" step="0.01" id="tx-amount" required placeholder="0.00" class="w-full px-3 py-2.5 rounded-xl text-sm">
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs text-zinc-400 mb-1">Categoría</label>
+              <label class="block text-xs text-[#c7beb4] mb-1">Categoría</label>
               <select id="tx-category" required class="w-full px-3 py-2.5 rounded-xl text-sm"></select>
             </div>
             <div>
-              <label class="block text-xs text-zinc-400 mb-1">Fecha / Mes inicial</label>
+              <label class="block text-xs text-[#c7beb4] mb-1">Fecha / Mes inicial</label>
               <input type="date" id="tx-date" required class="w-full px-3 py-2.5 rounded-xl text-sm">
             </div>
           </div>
 
-          <div id="expense-payment-fields" class="space-y-4 pt-2 border-t border-zinc-800/80">
+          <!-- Opción Recurrente -->
+          <div id="recurring-box" class="p-3.5 rounded-xl bg-[#26221e]/80 border border-[#3f3831] space-y-3">
+            <label class="flex items-center gap-2.5 cursor-pointer select-none">
+              <input type="checkbox" id="tx-recurring" onchange="toggleRecurringFields()" class="w-4 h-4 rounded accent-[#d4b996]">
+              <div>
+                <span class="text-xs font-medium text-[#f5efe6] block">Repetir todos los meses (Fijo / Recurrente)</span>
+                <span class="text-[11px] text-[#9e958b]">Ideal para servicios, cuota casa, alquiler, suscripciones o sueldo.</span>
+              </div>
+            </label>
+            <div id="recurring-end-field" class="hidden pt-2 border-t border-[#36302a]">
+              <label class="block text-[11px] text-[#c7beb4] mb-1">Repetir hasta el mes (opcional - dejar vacío para indefinido)</label>
+              <input type="month" id="tx-end-month" class="w-full px-3 py-2 rounded-lg text-xs">
+            </div>
+          </div>
+
+          <div id="expense-payment-fields" class="space-y-4 pt-2 border-t border-[#36302a]">
             <div>
-              <label class="block text-xs text-zinc-400 mb-1">Medio de Pago</label>
+              <label class="block text-xs text-[#c7beb4] mb-1">Medio de Pago</label>
               <select id="tx-payment-method" onchange="toggleInstallmentFields()" class="w-full px-3 py-2.5 rounded-xl text-sm">
-                <option value="cash">Efectivo / Débito / Transferencia (Descuenta hoy)</option>
+                <option value="cash">Efectivo / Débito / Transferencia</option>
                 <option value="card">Tarjeta de Crédito</option>
                 <option value="loan">Préstamo</option>
               </select>
@@ -267,22 +325,22 @@
 
             <div id="card-loan-details" class="hidden grid grid-cols-2 gap-4">
               <div>
-                <label id="entity-label" class="block text-xs text-zinc-400 mb-1">Tarjeta</label>
+                <label id="entity-label" class="block text-xs text-[#c7beb4] mb-1">Tarjeta</label>
                 <select id="tx-entity" class="w-full px-3 py-2.5 rounded-xl text-sm"></select>
               </div>
               <div>
-                <label class="block text-xs text-zinc-400 mb-1">Cantidad de Cuotas</label>
+                <label class="block text-xs text-[#c7beb4] mb-1">Cantidad de Cuotas</label>
                 <input type="number" id="tx-installments" min="1" max="60" value="1" class="w-full px-3 py-2.5 rounded-xl text-sm">
               </div>
             </div>
           </div>
 
           <div>
-            <label class="block text-xs text-zinc-400 mb-1">Descripción / Nota (Opcional)</label>
-            <input type="text" id="tx-note" placeholder="Ej: Compra semanal, Pelotas padel, etc." class="w-full px-3 py-2.5 rounded-xl text-sm">
+            <label class="block text-xs text-[#c7beb4] mb-1">Descripción / Nota (Opcional)</label>
+            <input type="text" id="tx-note" placeholder="Ej: EPEC, Agua, Cuota casa, Compra semanal..." class="w-full px-3 py-2.5 rounded-xl text-sm">
           </div>
 
-          <button type="submit" id="btn-submit-tx" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl text-sm transition mt-2">
+          <button type="submit" id="btn-submit-tx" class="w-full btn-sand font-semibold py-3 rounded-xl text-sm transition mt-2">
             Guardar Movimiento
           </button>
         </form>
@@ -292,14 +350,14 @@
     <!-- VISTA 3: DETALLE TARJETAS Y PRÉSTAMOS -->
     <section id="view-installments" class="hidden space-y-6">
       <div class="glass-card p-5 rounded-2xl">
-        <h2 class="font-semibold text-base mb-1">Totales a Pagar por Tarjeta y Préstamo</h2>
-        <p class="text-xs text-zinc-400 mb-4">Suma consolidada que vence en el mes seleccionado.</p>
+        <h2 class="font-semibold text-base text-[#f5efe6] mb-1">Totales a Pagar por Tarjeta y Préstamo</h2>
+        <p class="text-xs text-[#b5aca2] mb-4">Suma consolidada que vence en el mes seleccionado.</p>
         <div id="cards-breakdown" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
       </div>
 
       <div class="glass-card p-5 rounded-2xl">
-        <h2 class="font-semibold text-base mb-1">Detalle y Avance de Cuotas Activas</h2>
-        <p class="text-xs text-zinc-400 mb-4">Progreso individual de cada consumo financiado.</p>
+        <h2 class="font-semibold text-base text-[#f5efe6] mb-1">Detalle y Avance de Cuotas Activas</h2>
+        <p class="text-xs text-[#b5aca2] mb-4">Progreso individual de cada consumo financiado.</p>
         <div id="installments-detail-list" class="space-y-3"></div>
       </div>
     </section>
@@ -307,37 +365,37 @@
     <!-- VISTA 4: CONFIGURACIÓN DE LISTAS -->
     <section id="view-settings" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
       <div class="glass-card p-5 rounded-2xl space-y-3">
-        <h3 class="font-semibold text-sm">Categorías de Gastos</h3>
+        <h3 class="font-semibold text-sm text-[#f5efe6]">Categorías de Gastos</h3>
         <div class="flex gap-2">
           <input type="text" id="new-expenseCat" placeholder="Nueva categoría..." class="flex-1 px-3 py-2 rounded-xl text-xs">
-          <button onclick="addConfigItem('expenseCats', 'new-expenseCat')" class="px-3 py-2 bg-indigo-600 rounded-xl text-xs font-medium">Agregar</button>
+          <button onclick="addConfigItem('expenseCats', 'new-expenseCat')" class="px-3 py-2 btn-sand rounded-xl text-xs font-semibold">Agregar</button>
         </div>
         <div id="list-expenseCats" class="flex flex-wrap gap-2 pt-2"></div>
       </div>
 
       <div class="glass-card p-5 rounded-2xl space-y-3">
-        <h3 class="font-semibold text-sm">Categorías de Ingresos</h3>
+        <h3 class="font-semibold text-sm text-[#f5efe6]">Categorías de Ingresos</h3>
         <div class="flex gap-2">
           <input type="text" id="new-incomeCat" placeholder="Nueva categoría..." class="flex-1 px-3 py-2 rounded-xl text-xs">
-          <button onclick="addConfigItem('incomeCats', 'new-incomeCat')" class="px-3 py-2 bg-indigo-600 rounded-xl text-xs font-medium">Agregar</button>
+          <button onclick="addConfigItem('incomeCats', 'new-incomeCat')" class="px-3 py-2 btn-sand rounded-xl text-xs font-semibold">Agregar</button>
         </div>
         <div id="list-incomeCats" class="flex flex-wrap gap-2 pt-2"></div>
       </div>
 
       <div class="glass-card p-5 rounded-2xl space-y-3">
-        <h3 class="font-semibold text-sm">Tarjetas de Crédito</h3>
+        <h3 class="font-semibold text-sm text-[#f5efe6]">Tarjetas de Crédito</h3>
         <div class="flex gap-2">
           <input type="text" id="new-card" placeholder="Nueva tarjeta..." class="flex-1 px-3 py-2 rounded-xl text-xs">
-          <button onclick="addConfigItem('cards', 'new-card')" class="px-3 py-2 bg-indigo-600 rounded-xl text-xs font-medium">Agregar</button>
+          <button onclick="addConfigItem('cards', 'new-card')" class="px-3 py-2 btn-sand rounded-xl text-xs font-semibold">Agregar</button>
         </div>
         <div id="list-cards" class="flex flex-wrap gap-2 pt-2"></div>
       </div>
 
       <div class="glass-card p-5 rounded-2xl space-y-3">
-        <h3 class="font-semibold text-sm">Entidades de Préstamos</h3>
+        <h3 class="font-semibold text-sm text-[#f5efe6]">Entidades de Préstamos</h3>
         <div class="flex gap-2">
           <input type="text" id="new-loan" placeholder="Nueva entidad..." class="flex-1 px-3 py-2 rounded-xl text-xs">
-          <button onclick="addConfigItem('loans', 'new-loan')" class="px-3 py-2 bg-indigo-600 rounded-xl text-xs font-medium">Agregar</button>
+          <button onclick="addConfigItem('loans', 'new-loan')" class="px-3 py-2 btn-sand rounded-xl text-xs font-semibold">Agregar</button>
         </div>
         <div id="list-loans" class="flex flex-wrap gap-2 pt-2"></div>
       </div>
@@ -385,25 +443,31 @@
 
     document.getElementById('month-selector').addEventListener('change', renderDashboard);
 
+    window.stepMonth = (offset) => {
+      const sel = document.getElementById('month-selector');
+      sel.value = addMonths(sel.value, offset);
+      renderDashboard();
+    };
+
     window.setChartCurrency = (curr) => {
       chartCurrency = curr;
       document.getElementById('chart-btn-ars').className = curr === 'ARS'
-        ? "px-2.5 py-1 rounded text-xs font-medium bg-indigo-600 text-white"
-        : "px-2.5 py-1 rounded text-xs font-medium text-zinc-400 hover:text-white";
+        ? "px-2.5 py-1 rounded text-xs font-semibold btn-sand"
+        : "px-2.5 py-1 rounded text-xs font-medium text-[#b5aca2] hover:text-[#f5efe6]";
       document.getElementById('chart-btn-usd').className = curr === 'USD'
-        ? "px-2.5 py-1 rounded text-xs font-medium bg-indigo-600 text-white"
-        : "px-2.5 py-1 rounded text-xs font-medium text-zinc-400 hover:text-white";
+        ? "px-2.5 py-1 rounded text-xs font-semibold btn-sand"
+        : "px-2.5 py-1 rounded text-xs font-medium text-[#b5aca2] hover:text-[#f5efe6]";
       renderDashboard();
     };
 
     window.setProjCurrency = (curr) => {
       projCurrency = curr;
       document.getElementById('proj-btn-ars').className = curr === 'ARS'
-        ? "px-2.5 py-1 rounded text-xs font-medium bg-indigo-600 text-white"
-        : "px-2.5 py-1 rounded text-xs font-medium text-zinc-400 hover:text-white";
+        ? "px-2.5 py-1 rounded text-xs font-semibold btn-sand"
+        : "px-2.5 py-1 rounded text-xs font-medium text-[#b5aca2] hover:text-[#f5efe6]";
       document.getElementById('proj-btn-usd').className = curr === 'USD'
-        ? "px-2.5 py-1 rounded text-xs font-medium bg-indigo-600 text-white"
-        : "px-2.5 py-1 rounded text-xs font-medium text-zinc-400 hover:text-white";
+        ? "px-2.5 py-1 rounded text-xs font-semibold btn-sand"
+        : "px-2.5 py-1 rounded text-xs font-medium text-[#b5aca2] hover:text-[#f5efe6]";
       renderDashboard();
     };
 
@@ -515,9 +579,9 @@
       ['expenseCats', 'incomeCats', 'cards', 'loans'].forEach(key => {
         const container = document.getElementById(`list-${key}`);
         container.innerHTML = userConfig[key].map(item => `
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800 text-xs text-zinc-200 border border-zinc-700">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#26221e] text-xs text-[#f5efe6] border border-[#3f3831]">
             ${item}
-            <button onclick="removeConfigItem('${key}', '${item}')" class="text-zinc-400 hover:text-rose-400 font-bold">&times;</button>
+            <button onclick="removeConfigItem('${key}', '${item}')" class="text-[#b5aca2] hover:text-[#e5988e] font-bold">&times;</button>
           </span>
         `).join('');
       });
@@ -529,23 +593,59 @@
       switchTab('new');
     };
 
+    window.toggleRecurringFields = () => {
+      const isRec = document.getElementById('tx-recurring').checked;
+      const endField = document.getElementById('recurring-end-field');
+      const payMethodSelect = document.getElementById('tx-payment-method');
+
+      if (isRec) {
+        endField.classList.remove('hidden');
+        payMethodSelect.value = 'cash';
+        toggleInstallmentFields();
+        payMethodSelect.disabled = true;
+      } else {
+        endField.classList.add('hidden');
+        payMethodSelect.disabled = false;
+      }
+    };
+
     window.editTx = (id) => {
       const tx = allTransactions.find(t => t.id === id);
       if (!tx) return;
 
+      const selectedMonth = document.getElementById('month-selector').value;
+      const diffFromStart = getMonthDiff(tx.date, selectedMonth);
+      const isSplitForward = Boolean(tx.isRecurring && diffFromStart > 0);
+
       document.getElementById('edit-tx-id').value = tx.id;
-      document.getElementById('form-title').textContent = "Editar Movimiento";
-      document.getElementById('btn-submit-tx').textContent = "Actualizar Movimiento";
+      document.getElementById('edit-split-month').value = isSplitForward ? selectedMonth : '';
+
+      const noticeEl = document.getElementById('recurring-split-notice');
+      if (isSplitForward) {
+        document.getElementById('split-month-label').textContent = selectedMonth;
+        noticeEl.classList.remove('hidden');
+        document.getElementById('form-title').textContent = "Actualizar Monto Fijo";
+        document.getElementById('btn-submit-tx').textContent = "Guardar Nuevo Valor de Aquí en Adelante";
+      } else {
+        noticeEl.classList.add('hidden');
+        document.getElementById('form-title').textContent = "Editar Movimiento";
+        document.getElementById('btn-submit-tx').textContent = "Actualizar Movimiento";
+      }
+
       document.getElementById('btn-cancel-edit').classList.remove('hidden');
 
       setTxType(tx.type);
       document.getElementById('tx-currency').value = tx.currency;
       document.getElementById('tx-amount').value = tx.amount;
       document.getElementById('tx-category').value = tx.category;
-      document.getElementById('tx-date').value = tx.date;
+      document.getElementById('tx-date').value = isSplitForward ? `${selectedMonth}-01` : tx.date;
       document.getElementById('tx-note').value = tx.note || '';
 
-      if (tx.type === 'expense') {
+      document.getElementById('tx-recurring').checked = Boolean(tx.isRecurring);
+      document.getElementById('tx-end-month').value = tx.endMonth || '';
+      toggleRecurringFields();
+
+      if (tx.type === 'expense' && !tx.isRecurring) {
         document.getElementById('tx-payment-method').value = tx.paymentMethod || 'cash';
         toggleInstallmentFields();
         if (tx.paymentMethod !== 'cash') {
@@ -559,6 +659,8 @@
 
     window.cancelEdit = () => {
       document.getElementById('edit-tx-id').value = '';
+      document.getElementById('edit-split-month').value = '';
+      document.getElementById('recurring-split-notice').classList.add('hidden');
       document.getElementById('form-title').textContent = "Registrar Movimiento";
       document.getElementById('btn-submit-tx').textContent = "Guardar Movimiento";
       document.getElementById('btn-cancel-edit').classList.add('hidden');
@@ -566,6 +668,9 @@
       document.getElementById('tx-note').value = '';
       document.getElementById('tx-installments').value = '1';
       document.getElementById('tx-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('tx-recurring').checked = false;
+      document.getElementById('tx-end-month').value = '';
+      toggleRecurringFields();
       setTxType('expense');
       document.getElementById('tx-payment-method').value = 'cash';
       toggleInstallmentFields();
@@ -578,12 +683,12 @@
       const payFields = document.getElementById('expense-payment-fields');
 
       if (type === 'expense') {
-        btnExp.className = "py-2 rounded-lg text-sm font-medium bg-rose-500/20 text-rose-400 border border-rose-500/30";
-        btnInc.className = "py-2 rounded-lg text-sm font-medium text-zinc-400";
+        btnExp.className = "py-2 rounded-lg text-sm font-medium bg-[#d98276]/20 text-[#e5988e] border border-[#d98276]/35";
+        btnInc.className = "py-2 rounded-lg text-sm font-medium text-[#b5aca2]";
         payFields.classList.remove('hidden');
       } else {
-        btnInc.className = "py-2 rounded-lg text-sm font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
-        btnExp.className = "py-2 rounded-lg text-sm font-medium text-zinc-400";
+        btnInc.className = "py-2 rounded-lg text-sm font-medium bg-[#86b08e]/20 text-[#9ec4a5] border border-[#86b08e]/35";
+        btnExp.className = "py-2 rounded-lg text-sm font-medium text-[#b5aca2]";
         payFields.classList.add('hidden');
       }
       populateFormSelects();
@@ -621,18 +726,21 @@
     document.getElementById('tx-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const editId = document.getElementById('edit-tx-id').value;
+      const splitMonth = document.getElementById('edit-split-month').value;
       const type = document.getElementById('tx-type').value;
       const currency = document.getElementById('tx-currency').value;
       const amount = parseFloat(document.getElementById('tx-amount').value);
       const category = document.getElementById('tx-category').value;
       const date = document.getElementById('tx-date').value;
       const note = document.getElementById('tx-note').value.trim();
+      const isRecurring = document.getElementById('tx-recurring').checked;
+      const endMonth = isRecurring ? (document.getElementById('tx-end-month').value || '') : '';
 
       let paymentMethod = 'cash';
       let entity = '';
       let installments = 1;
 
-      if (type === 'expense') {
+      if (type === 'expense' && !isRecurring) {
         paymentMethod = document.getElementById('tx-payment-method').value;
         if (paymentMethod !== 'cash') {
           entity = document.getElementById('tx-entity').value;
@@ -640,9 +748,19 @@
         }
       }
 
-      const payload = { type, currency, amount, category, date, note, paymentMethod, entity, installments };
+      const payload = { type, currency, amount, category, date, note, isRecurring, endMonth, paymentMethod, entity, installments };
 
-      if (editId) {
+      if (editId && splitMonth) {
+        const prevMonth = addMonths(splitMonth, -1);
+        await updateDoc(doc(db, "users", currentUser.uid, "transactions", editId), {
+          endMonth: prevMonth
+        });
+        await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
+          ...payload,
+          date: `${splitMonth}-01`,
+          createdAt: Date.now()
+        });
+      } else if (editId) {
         await updateDoc(doc(db, "users", currentUser.uid, "transactions", editId), payload);
       } else {
         await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
@@ -665,7 +783,7 @@
     }
 
     window.deleteTx = async (id) => {
-      if (!confirm("¿Eliminar este registro completo (incluyendo todas sus cuotas)?")) return;
+      if (!confirm("¿Eliminar este registro completo?")) return;
       await deleteDoc(doc(db, "users", currentUser.uid, "transactions", id));
     };
 
@@ -693,6 +811,13 @@
       return prefix + num.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
     }
 
+    function isRecurringActiveInMonth(tx, targetMonthStr) {
+      const diff = getMonthDiff(tx.date, targetMonthStr);
+      if (diff < 0) return false;
+      if (tx.endMonth && targetMonthStr > tx.endMonth) return false;
+      return true;
+    }
+
     function getMonthSummary(monthStr) {
       const res = {
         ARS: { income: 0, cashExp: 0, creditDue: 0 },
@@ -700,6 +825,14 @@
       };
       allTransactions.forEach(tx => {
         const diff = getMonthDiff(tx.date, monthStr);
+
+        if (tx.isRecurring) {
+          if (!isRecurringActiveInMonth(tx, monthStr)) return;
+          if (tx.type === 'income') res[tx.currency].income += tx.amount;
+          else res[tx.currency].cashExp += tx.amount;
+          return;
+        }
+
         if (tx.type === 'income' && diff === 0) {
           res[tx.currency].income += tx.amount;
         } else if (tx.type === 'expense') {
@@ -724,6 +857,19 @@
 
       allTransactions.forEach(tx => {
         const diff = getMonthDiff(tx.date, selectedMonth);
+
+        if (tx.isRecurring) {
+          if (!isRecurringActiveInMonth(tx, selectedMonth)) return;
+          activeItems.push({
+            ...tx,
+            displayAmount: tx.amount,
+            cuotaInfo: tx.endMonth ? `Fijo mensual (hasta ${tx.endMonth})` : 'Fijo mensual'
+          });
+          if (tx.type === 'expense') {
+            categoryTotals[tx.currency][tx.category] = (categoryTotals[tx.currency][tx.category] || 0) + tx.amount;
+          }
+          return;
+        }
 
         if (tx.type === 'income' && diff === 0) {
           activeItems.push({ ...tx, displayAmount: tx.amount, cuotaInfo: null });
@@ -762,7 +908,7 @@
         
         const balEl = document.getElementById(`${lower}-balance`);
         balEl.textContent = formatMoney(balance, curr);
-        balEl.className = `text-3xl font-bold tracking-tight mt-0.5 ${balance >= 0 ? 'text-white' : 'text-rose-400'}`;
+        balEl.className = `text-3xl font-bold tracking-tight mt-0.5 ${balance >= 0 ? 'text-[#f5efe6]' : 'text-[#e5988e]'}`;
 
         document.getElementById(`${lower}-income`).textContent = formatMoney(t.income, curr);
         document.getElementById(`${lower}-cash-expense`).textContent = formatMoney(t.cashExp, curr);
@@ -771,24 +917,24 @@
 
       const listEl = document.getElementById('transactions-list');
       if (activeItems.length === 0) {
-        listEl.innerHTML = `<p class="p-8 text-center text-sm text-zinc-500">No hay movimientos registrados para este mes.</p>`;
+        listEl.innerHTML = `<p class="p-8 text-center text-sm text-[#9e958b]">No hay movimientos registrados para este mes.</p>`;
       } else {
         activeItems.sort((a, b) => b.createdAt - a.createdAt);
         listEl.innerHTML = activeItems.map(item => `
-          <div class="p-4 flex items-center justify-between gap-4 hover:bg-zinc-900/40 transition">
+          <div class="p-4 flex items-center justify-between gap-4 hover:bg-[#26221e]/60 transition">
             <div class="min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="font-medium text-sm text-zinc-100 truncate">${item.category}</span>
-                ${item.cuotaInfo ? `<span class="text-[11px] px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-300 border border-zinc-700">${item.cuotaInfo}</span>` : ''}
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-medium text-sm text-[#f5efe6] truncate">${item.category}</span>
+                ${item.cuotaInfo ? `<span class="text-[11px] px-2 py-0.5 rounded-md ${item.isRecurring ? 'bg-[#d4b996]/15 text-[#e6cfb0] border border-[#d4b996]/30' : 'bg-[#26221e] text-[#d1c8be] border border-[#3f3831]'}">${item.cuotaInfo}</span>` : ''}
               </div>
-              <p class="text-xs text-zinc-500 mt-0.5 truncate">${item.note || item.date}</p>
+              <p class="text-xs text-[#9e958b] mt-0.5 truncate">${item.note || item.date}</p>
             </div>
             <div class="flex items-center gap-2.5 shrink-0">
-              <span class="font-semibold text-sm ${item.type === 'income' ? 'text-emerald-400' : 'text-zinc-200'}">
+              <span class="font-semibold text-sm ${item.type === 'income' ? 'text-[#9ec4a5]' : 'text-[#f5efe6]'}">
                 ${item.type === 'income' ? '+' : '-'} ${formatMoney(item.displayAmount, item.currency)}
               </span>
-              <button onclick="editTx('${item.id}')" title="Editar" class="text-zinc-500 hover:text-indigo-400 text-xs px-1">✎</button>
-              <button onclick="deleteTx('${item.id}')" title="Eliminar" class="text-zinc-500 hover:text-rose-400 text-sm px-1">&times;</button>
+              <button onclick="editTx('${item.id}')" title="Editar (o actualizar monto de aquí en adelante)" class="text-[#b5aca2] hover:text-[#d4b996] text-xs px-1">✎</button>
+              <button onclick="deleteTx('${item.id}')" title="Eliminar" class="text-[#b5aca2] hover:text-[#e5988e] text-sm px-1">&times;</button>
             </div>
           </div>
         `).join('');
@@ -799,12 +945,13 @@
       const totalExpenseCurr = catEntries.reduce((acc, [, val]) => acc + val, 0);
 
       if (catEntries.length === 0) {
-        chartEl.innerHTML = `<p class="text-center text-sm text-zinc-500 py-4">Sin gastos registrados en ${chartCurrency} para este mes.</p>`;
+        chartEl.innerHTML = `<p class="text-center text-sm text-[#9e958b] py-4">Sin gastos registrados en ${chartCurrency} para este mes.</p>`;
       } else {
         const maxVal = catEntries[0][1];
+        // Paleta cálida tierra / arena / oliva / terracota
         const barColors = [
-          'bg-indigo-500', 'bg-violet-500', 'bg-sky-500', 'bg-emerald-500', 
-          'bg-amber-500', 'bg-rose-500', 'bg-fuchsia-500', 'bg-cyan-500', 'bg-teal-500'
+          'bg-[#d4b996]', 'bg-[#c49a6c]', 'bg-[#86b08e]', 'bg-[#d98276]', 
+          'bg-[#b5a38d]', 'bg-[#a38b71]', 'bg-[#8fa69d]', 'bg-[#c9a690]', 'bg-[#998d82]'
         ];
 
         chartEl.innerHTML = catEntries.map(([cat, val], idx) => {
@@ -816,12 +963,12 @@
             <div class="space-y-1.5">
               <div class="flex items-center justify-between text-xs">
                 <div class="flex items-center gap-2">
-                  <span class="font-medium text-zinc-200">${cat}</span>
-                  <span class="text-zinc-500">(${pctOfTotal}%)</span>
+                  <span class="font-medium text-[#f5efe6]">${cat}</span>
+                  <span class="text-[#9e958b]">(${pctOfTotal}%)</span>
                 </div>
-                <span class="font-semibold text-zinc-100">${formatMoney(val, chartCurrency)}</span>
+                <span class="font-semibold text-[#f5efe6]">${formatMoney(val, chartCurrency)}</span>
               </div>
-              <div class="w-full h-2.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800/80">
+              <div class="w-full h-2.5 bg-[#141210] rounded-full overflow-hidden border border-[#36302a]">
                 <div class="${colorClass} h-full rounded-full transition-all duration-500" style="width: ${barWidth}%"></div>
               </div>
             </div>
@@ -834,14 +981,14 @@
       const breakdownEl = document.getElementById('cards-breakdown');
       const entries = Object.entries(entitySummary);
       if (entries.length === 0) {
-        breakdownEl.innerHTML = `<p class="text-sm text-zinc-500 col-span-2">No tenés cuotas de tarjetas ni préstamos activos este mes.</p>`;
+        breakdownEl.innerHTML = `<p class="text-sm text-[#9e958b] col-span-2">No tenés cuotas de tarjetas ni préstamos activos este mes.</p>`;
       } else {
         breakdownEl.innerHTML = entries.map(([name, val]) => {
           const isUsd = name.includes('(USD)');
           return `
-            <div class="p-4 rounded-xl bg-zinc-900/70 border border-zinc-800 flex items-center justify-between">
-              <span class="text-sm font-medium text-zinc-300">${name}</span>
-              <span class="text-base font-bold text-amber-400">${formatMoney(val, isUsd ? 'USD' : 'ARS')}</span>
+            <div class="p-4 rounded-xl bg-[#26221e]/80 border border-[#3f3831] flex items-center justify-between">
+              <span class="text-sm font-medium text-[#e6dfd7]">${name}</span>
+              <span class="text-base font-bold text-[#e3c08d]">${formatMoney(val, isUsd ? 'USD' : 'ARS')}</span>
             </div>
           `;
         }).join('');
@@ -849,33 +996,33 @@
 
       const detailListEl = document.getElementById('installments-detail-list');
       if (activeInstallmentItems.length === 0) {
-        detailListEl.innerHTML = `<p class="text-sm text-zinc-500">No hay consumos en cuotas registrados para este mes.</p>`;
+        detailListEl.innerHTML = `<p class="text-sm text-[#9e958b]">No hay consumos en cuotas registrados para este mes.</p>`;
       } else {
         activeInstallmentItems.sort((a, b) => b.displayAmount - a.displayAmount);
         detailListEl.innerHTML = activeInstallmentItems.map(item => {
           const progressPct = Math.round((item.currentQuota / item.installments) * 100);
           return `
-            <div class="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/90 space-y-2.5">
+            <div class="p-4 rounded-xl bg-[#26221e]/60 border border-[#3f3831] space-y-2.5">
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <div class="flex items-center gap-2">
-                    <span class="text-xs font-semibold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">${item.entity}</span>
-                    <span class="text-sm font-medium text-zinc-100">${item.category}</span>
-                    ${item.note ? `<span class="text-xs text-zinc-400">• ${item.note}</span>` : ''}
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded bg-[#d4b996]/15 text-[#e3c08d] border border-[#d4b996]/30">${item.entity}</span>
+                    <span class="text-sm font-medium text-[#f5efe6]">${item.category}</span>
+                    ${item.note ? `<span class="text-xs text-[#b5aca2]">• ${item.note}</span>` : ''}
                   </div>
                 </div>
                 <div class="text-right">
-                  <span class="text-sm font-bold text-zinc-100">${formatMoney(item.displayAmount, item.currency)}</span>
-                  <span class="text-xs text-zinc-500 block">Total: ${formatMoney(item.amount, item.currency)}</span>
+                  <span class="text-sm font-bold text-[#f5efe6]">${formatMoney(item.displayAmount, item.currency)}</span>
+                  <span class="text-xs text-[#9e958b] block">Total: ${formatMoney(item.amount, item.currency)}</span>
                 </div>
               </div>
               <div class="space-y-1">
                 <div class="flex justify-between text-xs">
-                  <span class="text-zinc-400 font-medium">Avance: <strong class="text-zinc-200">${item.currentQuota}/${item.installments}</strong></span>
-                  <span class="text-zinc-500">${progressPct}% completado</span>
+                  <span class="text-[#b5aca2] font-medium">Avance: <strong class="text-[#f5efe6]">${item.currentQuota}/${item.installments}</strong></span>
+                  <span class="text-[#9e958b]">${progressPct}% completado</span>
                 </div>
-                <div class="w-full h-2 bg-zinc-950 rounded-full overflow-hidden border border-zinc-800">
-                  <div class="bg-amber-400 h-full rounded-full transition-all duration-500" style="width: ${progressPct}%"></div>
+                <div class="w-full h-2 bg-[#141210] rounded-full overflow-hidden border border-[#36302a]">
+                  <div class="bg-[#d4b996] h-full rounded-full transition-all duration-500" style="width: ${progressPct}%"></div>
                 </div>
               </div>
             </div>
@@ -907,20 +1054,20 @@
 
       const summaryEl = document.getElementById('projection-summary');
       summaryEl.innerHTML = `
-        <div class="p-3 rounded-xl bg-zinc-900/70 border border-zinc-800">
-          <p class="text-zinc-500">Cuotas este mes (${labels[0]})</p>
-          <p class="text-sm font-bold text-amber-400 mt-0.5">${formatMoney(currentCredit, projCurrency)}</p>
+        <div class="p-3 rounded-xl bg-[#26221e]/80 border border-[#3f3831]">
+          <p class="text-[#9e958b]">Cuotas este mes (${labels[0]})</p>
+          <p class="text-sm font-bold text-[#e3c08d] mt-0.5">${formatMoney(currentCredit, projCurrency)}</p>
         </div>
-        <div class="p-3 rounded-xl bg-zinc-900/70 border border-zinc-800">
-          <p class="text-zinc-500">Cuotas en ${labels[labels.length - 1]}</p>
-          <p class="text-sm font-bold ${diffCredit <= 0 ? 'text-emerald-400' : 'text-rose-400'} mt-0.5">
+        <div class="p-3 rounded-xl bg-[#26221e]/80 border border-[#3f3831]">
+          <p class="text-[#9e958b]">Cuotas en ${labels[labels.length - 1]}</p>
+          <p class="text-sm font-bold ${diffCredit <= 0 ? 'text-[#9ec4a5]' : 'text-[#e5988e]'} mt-0.5">
             ${formatMoney(endCredit, projCurrency)} 
             <span class="text-[11px] font-normal">(${diffCredit <= 0 ? 'Baja ' : 'Sube '}${formatMoney(Math.abs(diffCredit), projCurrency)})</span>
           </p>
         </div>
-        <div class="p-3 rounded-xl bg-zinc-900/70 border border-zinc-800">
-          <p class="text-zinc-500">Deuda total en próximos ${horizon}m</p>
-          <p class="text-sm font-bold text-zinc-200 mt-0.5">${formatMoney(totalCommittedHorizon, projCurrency)}</p>
+        <div class="p-3 rounded-xl bg-[#26221e]/80 border border-[#3f3831]">
+          <p class="text-[#9e958b]">Deuda total en próximos ${horizon}m</p>
+          <p class="text-sm font-bold text-[#f5efe6] mt-0.5">${formatMoney(totalCommittedHorizon, projCurrency)}</p>
         </div>
       `;
 
@@ -937,34 +1084,34 @@
             {
               label: 'Cuotas Tarjetas / Préstamos',
               data: creditSeries,
-              borderColor: '#fbbf24',
-              backgroundColor: 'rgba(251, 191, 36, 0.12)',
+              borderColor: '#d4b996',
+              backgroundColor: 'rgba(212, 185, 150, 0.14)',
               borderWidth: 2.5,
               tension: 0.35,
               fill: true,
               pointRadius: 4,
-              pointBackgroundColor: '#fbbf24'
+              pointBackgroundColor: '#d4b996'
             },
             {
-              label: 'Egresos Totales (Cuotas + Contado)',
+              label: 'Egresos Totales (Cuotas + Fijos + Contado)',
               data: totalExpenseSeries,
-              borderColor: '#fb7185',
+              borderColor: '#d98276',
               backgroundColor: 'transparent',
               borderWidth: 2,
               borderDash: [5, 5],
               tension: 0.35,
               pointRadius: 3,
-              pointBackgroundColor: '#fb7185'
+              pointBackgroundColor: '#d98276'
             },
             {
-              label: 'Ingresos Registrados',
+              label: 'Ingresos (Fijos + Puntuales)',
               data: incomeSeries,
-              borderColor: '#34d399',
+              borderColor: '#86b08e',
               backgroundColor: 'transparent',
               borderWidth: 2,
               tension: 0.35,
               pointRadius: 3,
-              pointBackgroundColor: '#34d399'
+              pointBackgroundColor: '#86b08e'
             }
           ]
         },
@@ -974,14 +1121,14 @@
           interaction: { mode: 'index', intersect: false },
           plugins: {
             legend: {
-              labels: { color: '#a1a1aa', font: { size: 11, family: 'Inter' } }
+              labels: { color: '#c7beb4', font: { size: 11, family: 'Inter' } }
             },
             tooltip: {
-              backgroundColor: '#18181b',
-              borderColor: '#27272a',
+              backgroundColor: '#1e1b18',
+              borderColor: '#3f3831',
               borderWidth: 1,
-              titleColor: '#f4f4f5',
-              bodyColor: '#d4d4d8',
+              titleColor: '#f5efe6',
+              bodyColor: '#d1c8be',
               callbacks: {
                 label: (context) => `${context.dataset.label}: ${formatMoney(context.parsed.y, projCurrency)}`
               }
@@ -989,14 +1136,14 @@
           },
           scales: {
             x: {
-              grid: { color: 'rgba(39, 39, 42, 0.5)' },
-              ticks: { color: '#71717a', font: { size: 11 } }
+              grid: { color: 'rgba(54, 48, 42, 0.6)' },
+              ticks: { color: '#9e958b', font: { size: 11 } }
             },
             y: {
               beginAtZero: true,
-              grid: { color: 'rgba(39, 39, 42, 0.5)' },
+              grid: { color: 'rgba(54, 48, 42, 0.6)' },
               ticks: {
-                color: '#71717a',
+                color: '#9e958b',
                 font: { size: 11 },
                 callback: (val) => projCurrency === 'USD' ? 'US$ ' + val.toLocaleString('es-AR') : '$ ' + val.toLocaleString('es-AR')
               }
@@ -1011,10 +1158,10 @@
       ['dashboard', 'new', 'installments', 'settings'].forEach(t => {
         document.getElementById(`view-${t}`).classList.add('hidden');
         const btn = document.getElementById(`tab-${t}`);
-        btn.className = "tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-zinc-900 text-zinc-400 hover:text-white transition";
+        btn.className = "tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-[#1e1b18] border border-[#36302a] text-[#c7beb4] hover:text-[#f5efe6] transition";
       });
       document.getElementById(`view-${tabName}`).classList.remove('hidden');
-      document.getElementById(`tab-${tabName}`).className = "tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-indigo-600 text-white transition";
+      document.getElementById(`tab-${tabName}`).className = "tab-btn px-4 py-2 rounded-xl text-sm font-semibold btn-sand transition";
     };
   </script>
 </body>
