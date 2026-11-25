@@ -132,10 +132,11 @@
 
     <!-- Navegación -->
     <nav class="flex gap-2 my-6 overflow-x-auto pb-1">
-      <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn px-4 py-2 rounded-xl text-sm font-semibold btn-sand">Resumen y Movimientos</button>
-      <button onclick="switchTab('new')" id="tab-new" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-[#1e1b18] border border-[#36302a] text-[#c7beb4] hover:text-[#f5efe6]">+ Cargar Movimiento</button>
-      <button onclick="switchTab('installments')" id="tab-installments" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-[#1e1b18] border border-[#36302a] text-[#c7beb4] hover:text-[#f5efe6]">Tarjetas y Cuotas</button>
-      <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-[#1e1b18] border border-[#36302a] text-[#c7beb4] hover:text-[#f5efe6]">Configurar Listas</button>
+      <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn px-4 py-2 rounded-xl text-sm font-semibold btn-sand shrink-0">Resumen y Movimientos</button>
+      <button onclick="switchTab('new')" id="tab-new" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-[#1e1b18] border border-[#36302a] text-[#c7beb4] hover:text-[#f5efe6] shrink-0">+ Cargar Movimiento</button>
+      <button onclick="switchTab('recurring')" id="tab-recurring" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-[#1e1b18] border border-[#36302a] text-[#c7beb4] hover:text-[#f5efe6] shrink-0">Fijos / Recurrentes</button>
+      <button onclick="switchTab('installments')" id="tab-installments" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-[#1e1b18] border border-[#36302a] text-[#c7beb4] hover:text-[#f5efe6] shrink-0">Tarjetas y Cuotas</button>
+      <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-[#1e1b18] border border-[#36302a] text-[#c7beb4] hover:text-[#f5efe6] shrink-0">Configurar Listas</button>
     </nav>
 
     <!-- VISTA 1: DASHBOARD -->
@@ -347,6 +348,57 @@
       </div>
     </section>
 
+    <!-- VISTA 2.5: GESTIÓN DE RECURRENTES / FIJOS -->
+    <section id="view-recurring" class="hidden space-y-6">
+      
+      <!-- Resumen consolidado de recurrentes del mes seleccionado -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="glass-card p-4 rounded-2xl">
+          <p class="text-xs text-[#b5aca2]">Gastos Fijos Activos (ARS)</p>
+          <p id="rec-total-exp-ars" class="text-2xl font-bold text-[#e5988e] mt-1">$ 0</p>
+          <p class="text-[11px] text-[#9e958b] mt-0.5">Incluye contado y débitos en tarjeta</p>
+        </div>
+        <div class="glass-card p-4 rounded-2xl">
+          <p class="text-xs text-[#b5aca2]">Gastos Fijos Activos (USD)</p>
+          <p id="rec-total-exp-usd" class="text-2xl font-bold text-[#e5988e] mt-1">US$ 0</p>
+          <p class="text-[11px] text-[#9e958b] mt-0.5">Suscripciones y servicios en dólares</p>
+        </div>
+        <div class="glass-card p-4 rounded-2xl">
+          <p class="text-xs text-[#b5aca2]">Ingresos Fijos Activos (ARS)</p>
+          <p id="rec-total-inc-ars" class="text-2xl font-bold text-[#9ec4a5] mt-1">$ 0</p>
+          <p class="text-[11px] text-[#9e958b] mt-0.5">Sueldo / ingresos mensuales fijos</p>
+        </div>
+      </div>
+
+      <!-- Listado filtrable de recurrentes -->
+      <div class="glass-card p-5 rounded-2xl space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#36302a] pb-4">
+          <div>
+            <h2 class="font-semibold text-base text-[#f5efe6]">Movimientos Fijos y Débitos Automáticos</h2>
+            <p class="text-xs text-[#b5aca2]">Revisá, filtrá o editá tus gastos e ingresos recurrentes. Si aumentó un servicio, editálo desde el mes del aumento.</p>
+          </div>
+          <button onclick="openNewRecurringForm()" class="px-3.5 py-2 rounded-xl text-xs font-semibold btn-sand">+ Nuevo Fijo / Débito</button>
+        </div>
+
+        <!-- Filtros rápidos -->
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap gap-2">
+            <button onclick="setRecurringFilter('ALL')" id="rec-filter-ALL" class="px-3 py-1.5 rounded-lg text-xs font-semibold btn-sand">Todos</button>
+            <button onclick="setRecurringFilter('EXPENSE')" id="rec-filter-EXPENSE" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#26221e] text-[#c7beb4] border border-[#3f3831] hover:text-[#f5efe6]">Solo Gastos Fijos</button>
+            <button onclick="setRecurringFilter('CARD')" id="rec-filter-CARD" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#26221e] text-[#c7beb4] border border-[#3f3831] hover:text-[#f5efe6]">Débitos en Tarjeta</button>
+            <button onclick="setRecurringFilter('INCOME')" id="rec-filter-INCOME" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#26221e] text-[#c7beb4] border border-[#3f3831] hover:text-[#f5efe6]">Ingresos Fijos</button>
+          </div>
+          <label class="flex items-center gap-2 text-xs text-[#b5aca2] cursor-pointer select-none">
+            <input type="checkbox" id="rec-show-history" onchange="renderDashboard()" class="w-3.5 h-3.5 rounded accent-[#d4b996]">
+            Mostrar también históricos finalizados
+          </label>
+        </div>
+
+        <div id="recurring-list" class="space-y-3 pt-1"></div>
+      </div>
+
+    </section>
+
     <!-- VISTA 3: DETALLE TARJETAS Y PRÉSTAMOS -->
     <section id="view-installments" class="hidden space-y-6">
       
@@ -473,7 +525,8 @@
     let chartCurrency = 'ARS';
     let projCurrency = 'ARS';
     let entityProjCurrency = 'ARS';
-    let selectedEntityFilter = 'ALL'; // 'ALL' o 'card::Visa' / 'loan::BNA'
+    let selectedEntityFilter = 'ALL';
+    let recurringFilter = 'ALL'; // 'ALL', 'EXPENSE', 'CARD', 'INCOME'
     let projChartInstance = null;
     let entityProjChartInstance = null;
 
@@ -528,6 +581,17 @@
       document.getElementById('ent-proj-btn-usd').className = curr === 'USD'
         ? "px-2.5 py-1 rounded text-xs font-semibold btn-sand"
         : "px-2.5 py-1 rounded text-xs font-medium text-[#b5aca2] hover:text-[#f5efe6]";
+      renderDashboard();
+    };
+
+    window.setRecurringFilter = (filter) => {
+      recurringFilter = filter;
+      ['ALL', 'EXPENSE', 'CARD', 'INCOME'].forEach(f => {
+        const btn = document.getElementById(`rec-filter-${f}`);
+        btn.className = f === filter
+          ? "px-3 py-1.5 rounded-lg text-xs font-semibold btn-sand"
+          : "px-3 py-1.5 rounded-lg text-xs font-medium bg-[#26221e] text-[#c7beb4] border border-[#3f3831] hover:text-[#f5efe6]";
+      });
       renderDashboard();
     };
 
@@ -671,6 +735,13 @@
     // FORMULARIO DE MOVIMIENTOS
     window.openNewForm = () => {
       cancelEdit();
+      switchTab('new');
+    };
+
+    window.openNewRecurringForm = () => {
+      cancelEdit();
+      document.getElementById('tx-recurring').checked = true;
+      toggleRecurringFields();
       switchTab('new');
     };
 
@@ -1136,6 +1207,88 @@
 
       renderProjectionChart(selectedMonth);
       renderInstallmentsTab(selectedMonth, entityCardsMap, activeInstallmentItems);
+      renderRecurringTab(selectedMonth);
+    }
+
+    function renderRecurringTab(selectedMonth) {
+      const showHistory = document.getElementById('rec-show-history').checked;
+      const allRecurring = allTransactions.filter(tx => Boolean(tx.isRecurring));
+
+      let totalExpArs = 0;
+      let totalExpUsd = 0;
+      let totalIncArs = 0;
+
+      allRecurring.forEach(tx => {
+        if (!isRecurringActiveInMonth(tx, selectedMonth)) return;
+        if (tx.type === 'expense') {
+          if (tx.currency === 'ARS') totalExpArs += tx.amount;
+          else totalExpUsd += tx.amount;
+        } else if (tx.type === 'income' && tx.currency === 'ARS') {
+          totalIncArs += tx.amount;
+        }
+      });
+
+      document.getElementById('rec-total-exp-ars').textContent = formatMoney(totalExpArs, 'ARS');
+      document.getElementById('rec-total-exp-usd').textContent = formatMoney(totalExpUsd, 'USD');
+      document.getElementById('rec-total-inc-ars').textContent = formatMoney(totalIncArs, 'ARS');
+
+      const filtered = allRecurring.filter(tx => {
+        const isActive = isRecurringActiveInMonth(tx, selectedMonth);
+        if (!showHistory && !isActive) return false;
+
+        if (recurringFilter === 'EXPENSE') return tx.type === 'expense';
+        if (recurringFilter === 'CARD') return tx.type === 'expense' && tx.paymentMethod && tx.paymentMethod !== 'cash';
+        if (recurringFilter === 'INCOME') return tx.type === 'income';
+        return true;
+      });
+
+      filtered.sort((a, b) => b.amount - a.amount);
+
+      const listEl = document.getElementById('recurring-list');
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<p class="text-sm text-[#9e958b] py-4 text-center">No hay movimientos recurrentes para este filtro.</p>`;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(tx => {
+        const isActive = isRecurringActiveInMonth(tx, selectedMonth);
+        const isCard = tx.type === 'expense' && tx.paymentMethod && tx.paymentMethod !== 'cash';
+        const methodBadge = tx.type === 'income'
+          ? `<span class="text-[11px] px-2 py-0.5 rounded bg-[#86b08e]/15 text-[#9ec4a5] border border-[#86b08e]/30">Ingreso Fijo</span>`
+          : isCard
+            ? `<span class="text-[11px] px-2 py-0.5 rounded bg-[#d4b996]/15 text-[#e3c08d] border border-[#d4b996]/30">Débito auto • ${tx.entity}</span>`
+            : `<span class="text-[11px] px-2 py-0.5 rounded bg-[#26221e] text-[#c7beb4] border border-[#3f3831]">Contado / Débito cuenta</span>`;
+
+        const statusBadge = !isActive
+          ? `<span class="text-[11px] px-2 py-0.5 rounded bg-[#d98276]/15 text-[#e5988e] border border-[#d98276]/30">Inactivo en ${selectedMonth}</span>`
+          : '';
+
+        return `
+          <div class="p-4 rounded-xl bg-[#26221e]/60 border border-[#3f3831] flex flex-wrap items-center justify-between gap-3 ${!isActive ? 'opacity-65' : ''}">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-semibold text-sm text-[#f5efe6]">${tx.category}</span>
+                ${methodBadge}
+                ${statusBadge}
+              </div>
+              <p class="text-xs text-[#9e958b] mt-1">
+                ${tx.note ? `<span class="text-[#d1c8be]">${tx.note}</span> • ` : ''}
+                Desde: ${tx.date}${tx.endMonth ? ` • Hasta: ${tx.endMonth}` : ' • Sin fecha de fin'}
+              </p>
+            </div>
+
+            <div class="flex items-center gap-3 shrink-0">
+              <span class="text-base font-bold ${tx.type === 'income' ? 'text-[#9ec4a5]' : 'text-[#f5efe6]'}">
+                ${tx.type === 'income' ? '+' : '-'} ${formatMoney(tx.amount, tx.currency)}
+              </span>
+              <div class="flex items-center gap-1 border-l border-[#36302a] pl-2.5">
+                <button onclick="editTx('${tx.id}')" title="Editar o actualizar valor desde ${selectedMonth}" class="p-1.5 rounded-lg bg-[#1e1b18] hover:bg-[#332d27] text-[#c7beb4] hover:text-[#d4b996] text-xs transition">✎</button>
+                <button onclick="deleteTx('${tx.id}')" title="Eliminar recurrente" class="p-1.5 rounded-lg bg-[#1e1b18] hover:bg-[#332d27] text-[#c7beb4] hover:text-[#e5988e] text-xs transition">&times;</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     function renderInstallmentsTab(selectedMonth, entityCardsMap, activeInstallmentItems) {
@@ -1497,13 +1650,13 @@
 
     // NAVEGACIÓN DE PESTAÑAS
     window.switchTab = (tabName) => {
-      ['dashboard', 'new', 'installments', 'settings'].forEach(t => {
+      ['dashboard', 'new', 'recurring', 'installments', 'settings'].forEach(t => {
         document.getElementById(`view-${t}`).classList.add('hidden');
         const btn = document.getElementById(`tab-${t}`);
-        btn.className = "tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-[#1e1b18] border border-[#36302a] text-[#c7beb4] hover:text-[#f5efe6] transition";
+        btn.className = "tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-[#1e1b18] border border-[#36302a] text-[#c7beb4] hover:text-[#f5efe6] transition shrink-0";
       });
       document.getElementById(`view-${tabName}`).classList.remove('hidden');
-      document.getElementById(`tab-${tabName}`).className = "tab-btn px-4 py-2 rounded-xl text-sm font-semibold btn-sand transition";
+      document.getElementById(`tab-${tabName}`).className = "tab-btn px-4 py-2 rounded-xl text-sm font-semibold btn-sand transition shrink-0";
     };
   </script>
 </body>
