@@ -516,4 +516,995 @@
         : "px-2.5 py-1 rounded text-xs font-medium text-[#b5aca2] hover:text-[#f5efe6]";
       document.getElementById('proj-btn-usd').className = curr === 'USD'
         ? "px-2.5 py-1 rounded text-xs font-semibold btn-sand"
-        : "px-2.5 py-1 rounded text-xs font-medium text-[#b5aca2] hover:
+        : "px-2.5 py-1 rounded text-xs font-medium text-[#b5aca2] hover:text-[#f5efe6]";
+      renderDashboard();
+    };
+
+    window.setEntityProjCurrency = (curr) => {
+      entityProjCurrency = curr;
+      document.getElementById('ent-proj-btn-ars').className = curr === 'ARS'
+        ? "px-2.5 py-1 rounded text-xs font-semibold btn-sand"
+        : "px-2.5 py-1 rounded text-xs font-medium text-[#b5aca2] hover:text-[#f5efe6]";
+      document.getElementById('ent-proj-btn-usd').className = curr === 'USD'
+        ? "px-2.5 py-1 rounded text-xs font-semibold btn-sand"
+        : "px-2.5 py-1 rounded text-xs font-medium text-[#b5aca2] hover:text-[#f5efe6]";
+      renderDashboard();
+    };
+
+    window.selectEntityFilter = (key) => {
+      if (selectedEntityFilter === key && key !== 'ALL') {
+        selectedEntityFilter = 'ALL';
+      } else {
+        selectedEntityFilter = key;
+      }
+      if (selectedEntityFilter !== 'ALL') {
+        const [method, entName] = selectedEntityFilter.split('::');
+        const hasArs = allTransactions.some(t => t.paymentMethod === method && t.entity === entName && t.currency === 'ARS');
+        const hasUsd = allTransactions.some(t => t.paymentMethod === method && t.entity === entName && t.currency === 'USD');
+        if (!hasArs && hasUsd && entityProjCurrency !== 'USD') {
+          setEntityProjCurrency('USD');
+          return;
+        } else if (hasArs && !hasUsd && entityProjCurrency !== 'ARS') {
+          setEntityProjCurrency('ARS');
+          return;
+        }
+      }
+      renderDashboard();
+    };
+
+    // AUTHENTICATION
+    const authForm = document.getElementById('auth-form');
+    const authError = document.getElementById('auth-error');
+    const authInfo = document.getElementById('auth-info');
+
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      authError.classList.add('hidden');
+      authInfo.classList.add('hidden');
+      const email = document.getElementById('auth-email').value.trim();
+      const pass = document.getElementById('auth-password').value;
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+      } catch (err) {
+        authError.textContent = `No se pudo entrar (${err.code}). Verificá tu clave o usá el botón de restablecer contraseña.`;
+        authError.classList.remove('hidden');
+      }
+    });
+
+    document.getElementById('btn-register').addEventListener('click', async () => {
+      authError.classList.add('hidden');
+      authInfo.classList.add('hidden');
+      const email = document.getElementById('auth-email').value.trim();
+      const pass = document.getElementById('auth-password').value;
+      if (!email || pass.length < 6) {
+        authError.textContent = "Ingresá un correo válido y una contraseña de al menos 6 caracteres.";
+        authError.classList.remove('hidden');
+        return;
+      }
+      try {
+        await createUserWithEmailAndPassword(auth, email, pass);
+      } catch (err) {
+        authError.textContent = `Error al registrar (${err.code}). Si ya creaste la cuenta antes, usá "Iniciar Sesión".`;
+        authError.classList.remove('hidden');
+      }
+    });
+
+    document.getElementById('btn-reset-pass').addEventListener('click', async () => {
+      authError.classList.add('hidden');
+      authInfo.classList.add('hidden');
+      const email = document.getElementById('auth-email').value.trim();
+      if (!email) {
+        authError.textContent = "Escribí tu correo arriba primero para enviarte el link de recuperación.";
+        authError.classList.remove('hidden');
+        return;
+      }
+      try {
+        await sendPasswordResetEmail(auth, email);
+        authInfo.textContent = "Listo. Te enviamos un correo para restablecer tu contraseña (revisá también Spam).";
+        authInfo.classList.remove('hidden');
+      } catch (err) {
+        authError.textContent = `Error al enviar correo (${err.code}).`;
+        authError.classList.remove('hidden');
+      }
+    });
+
+    document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('app-screen').classList.remove('hidden');
+        document.getElementById('user-email-display').textContent = user.email;
+        await loadOrInitUserConfig();
+        listenTransactions();
+      } else {
+        currentUser = null;
+        document.getElementById('auth-screen').classList.remove('hidden');
+        document.getElementById('app-screen').classList.add('hidden');
+      }
+    });
+
+    // CONFIGURACIÓN DE USUARIO
+    async function loadOrInitUserConfig() {
+      const configRef = doc(db, "users", currentUser.uid, "settings", "lists");
+      const snap = await getDoc(configRef);
+      if (snap.exists()) {
+        userConfig = snap.data();
+      } else {
+        await setDoc(configRef, userConfig);
+      }
+      renderConfigUI();
+      populateFormSelects();
+    }
+
+    window.addConfigItem = async (key, inputId) => {
+      const input = document.getElementById(inputId);
+      const val = input.value.trim();
+      if (!val || userConfig[key].includes(val)) return;
+      userConfig[key].push(val);
+      input.value = '';
+      await setDoc(doc(db, "users", currentUser.uid, "settings", "lists"), userConfig);
+      renderConfigUI();
+      populateFormSelects();
+    };
+
+    window.removeConfigItem = async (key, val) => {
+      userConfig[key] = userConfig[key].filter(item => item !== val);
+      await setDoc(doc(db, "users", currentUser.uid, "settings", "lists"), userConfig);
+      renderConfigUI();
+      populateFormSelects();
+    };
+
+    function renderConfigUI() {
+      ['expenseCats', 'incomeCats', 'cards', 'loans'].forEach(key => {
+        const container = document.getElementById(`list-${key}`);
+        container.innerHTML = userConfig[key].map(item => `
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#26221e] text-xs text-[#f5efe6] border border-[#3f3831]">
+            ${item}
+            <button onclick="removeConfigItem('${key}', '${item}')" class="text-[#b5aca2] hover:text-[#e5988e] font-bold">&times;</button>
+          </span>
+        `).join('');
+      });
+    }
+
+    // FORMULARIO DE MOVIMIENTOS
+    window.openNewForm = () => {
+      cancelEdit();
+      switchTab('new');
+    };
+
+    window.openNewInstallmentForm = () => {
+      cancelEdit();
+      if (selectedEntityFilter !== 'ALL') {
+        const [method, entName] = selectedEntityFilter.split('::');
+        document.getElementById('tx-payment-method').value = method;
+        toggleInstallmentFields();
+        document.getElementById('tx-entity').value = entName;
+      } else {
+        document.getElementById('tx-payment-method').value = 'card';
+        toggleInstallmentFields();
+      }
+      switchTab('new');
+    };
+
+    window.toggleRecurringFields = () => {
+      const isRec = document.getElementById('tx-recurring').checked;
+      const endField = document.getElementById('recurring-end-field');
+
+      if (isRec) {
+        endField.classList.remove('hidden');
+      } else {
+        endField.classList.add('hidden');
+      }
+      toggleInstallmentFields();
+    };
+
+    window.editTx = (id) => {
+      const tx = allTransactions.find(t => t.id === id);
+      if (!tx) return;
+
+      const selectedMonth = document.getElementById('month-selector').value;
+      const diffFromStart = getMonthDiff(tx.date, selectedMonth);
+      const isSplitForward = Boolean(tx.isRecurring && diffFromStart > 0);
+
+      document.getElementById('edit-tx-id').value = tx.id;
+      document.getElementById('edit-split-month').value = isSplitForward ? selectedMonth : '';
+
+      const noticeEl = document.getElementById('recurring-split-notice');
+      if (isSplitForward) {
+        document.getElementById('split-month-label').textContent = selectedMonth;
+        noticeEl.classList.remove('hidden');
+        document.getElementById('form-title').textContent = "Actualizar Monto Fijo";
+        document.getElementById('btn-submit-tx').textContent = "Guardar Nuevo Valor de Aquí en Adelante";
+      } else {
+        noticeEl.classList.add('hidden');
+        document.getElementById('form-title').textContent = "Editar Movimiento";
+        document.getElementById('btn-submit-tx').textContent = "Actualizar Movimiento";
+      }
+
+      document.getElementById('btn-cancel-edit').classList.remove('hidden');
+
+      setTxType(tx.type);
+      document.getElementById('tx-currency').value = tx.currency;
+      document.getElementById('tx-amount').value = tx.amount;
+      document.getElementById('tx-category').value = tx.category;
+      document.getElementById('tx-date').value = isSplitForward ? `${selectedMonth}-01` : tx.date;
+      document.getElementById('tx-note').value = tx.note || '';
+
+      document.getElementById('tx-recurring').checked = Boolean(tx.isRecurring);
+      document.getElementById('tx-end-month').value = tx.endMonth || '';
+      toggleRecurringFields();
+
+      if (tx.type === 'expense') {
+        document.getElementById('tx-payment-method').value = tx.paymentMethod || 'cash';
+        toggleInstallmentFields();
+        if (tx.paymentMethod && tx.paymentMethod !== 'cash') {
+          document.getElementById('tx-entity').value = tx.entity;
+          if (!tx.isRecurring) {
+            document.getElementById('tx-installments').value = tx.installments || 1;
+          }
+        }
+      }
+
+      switchTab('new');
+    };
+
+    window.cancelEdit = () => {
+      document.getElementById('edit-tx-id').value = '';
+      document.getElementById('edit-split-month').value = '';
+      document.getElementById('recurring-split-notice').classList.add('hidden');
+      document.getElementById('form-title').textContent = "Registrar Movimiento";
+      document.getElementById('btn-submit-tx').textContent = "Guardar Movimiento";
+      document.getElementById('btn-cancel-edit').classList.add('hidden');
+      document.getElementById('tx-amount').value = '';
+      document.getElementById('tx-note').value = '';
+      document.getElementById('tx-installments').value = '1';
+      document.getElementById('tx-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('tx-recurring').checked = false;
+      document.getElementById('tx-end-month').value = '';
+      setTxType('expense');
+      document.getElementById('tx-payment-method').value = 'cash';
+      toggleRecurringFields();
+    };
+
+    window.setTxType = (type) => {
+      document.getElementById('tx-type').value = type;
+      const btnExp = document.getElementById('type-expense');
+      const btnInc = document.getElementById('type-income');
+      const payFields = document.getElementById('expense-payment-fields');
+
+      if (type === 'expense') {
+        btnExp.className = "py-2 rounded-lg text-sm font-medium bg-[#d98276]/20 text-[#e5988e] border border-[#d98276]/35";
+        btnInc.className = "py-2 rounded-lg text-sm font-medium text-[#b5aca2]";
+        payFields.classList.remove('hidden');
+      } else {
+        btnInc.className = "py-2 rounded-lg text-sm font-medium bg-[#86b08e]/20 text-[#9ec4a5] border border-[#86b08e]/35";
+        btnExp.className = "py-2 rounded-lg text-sm font-medium text-[#b5aca2]";
+        payFields.classList.add('hidden');
+      }
+      populateFormSelects();
+    };
+
+    window.toggleInstallmentFields = () => {
+      const method = document.getElementById('tx-payment-method').value;
+      const isRec = document.getElementById('tx-recurring').checked;
+      const details = document.getElementById('card-loan-details');
+      const instWrapper = document.getElementById('installments-wrapper');
+      const label = document.getElementById('entity-label');
+
+      if (method === 'cash') {
+        details.classList.add('hidden');
+      } else {
+        details.classList.remove('hidden');
+        label.textContent = method === 'card' ? 'Tarjeta' : 'Préstamo';
+        populateEntitySelect(method);
+
+        if (isRec) {
+          instWrapper.classList.add('hidden');
+        } else {
+          instWrapper.classList.remove('hidden');
+        }
+      }
+    };
+
+    function populateEntitySelect(method) {
+      const select = document.getElementById('tx-entity');
+      const list = method === 'card' ? userConfig.cards : userConfig.loans;
+      select.innerHTML = list.map(i => `<option value="${i}">${i}</option>`).join('');
+    }
+
+    function populateFormSelects() {
+      const type = document.getElementById('tx-type').value;
+      const catSelect = document.getElementById('tx-category');
+      const list = type === 'expense' ? userConfig.expenseCats : userConfig.incomeCats;
+      catSelect.innerHTML = list.map(c => `<option value="${c}">${c}</option>`).join('');
+      
+      const method = document.getElementById('tx-payment-method').value;
+      if (method !== 'cash') populateEntitySelect(method);
+    }
+
+    document.getElementById('tx-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const editId = document.getElementById('edit-tx-id').value;
+      const splitMonth = document.getElementById('edit-split-month').value;
+      const type = document.getElementById('tx-type').value;
+      const currency = document.getElementById('tx-currency').value;
+      const amount = parseFloat(document.getElementById('tx-amount').value);
+      const category = document.getElementById('tx-category').value;
+      const date = document.getElementById('tx-date').value;
+      const note = document.getElementById('tx-note').value.trim();
+      const isRecurring = document.getElementById('tx-recurring').checked;
+      const endMonth = isRecurring ? (document.getElementById('tx-end-month').value || '') : '';
+
+      let paymentMethod = 'cash';
+      let entity = '';
+      let installments = 1;
+
+      if (type === 'expense') {
+        paymentMethod = document.getElementById('tx-payment-method').value;
+        if (paymentMethod !== 'cash') {
+          entity = document.getElementById('tx-entity').value;
+          installments = isRecurring ? 1 : (parseInt(document.getElementById('tx-installments').value) || 1);
+        }
+      }
+
+      const payload = { type, currency, amount, category, date, note, isRecurring, endMonth, paymentMethod, entity, installments };
+
+      if (editId && splitMonth) {
+        const prevMonth = addMonths(splitMonth, -1);
+        await updateDoc(doc(db, "users", currentUser.uid, "transactions", editId), {
+          endMonth: prevMonth
+        });
+        await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
+          ...payload,
+          date: `${splitMonth}-01`,
+          createdAt: Date.now()
+        });
+      } else if (editId) {
+        await updateDoc(doc(db, "users", currentUser.uid, "transactions", editId), payload);
+      } else {
+        await addDoc(collection(db, "users", currentUser.uid, "transactions"), {
+          ...payload,
+          createdAt: Date.now()
+        });
+      }
+
+      cancelEdit();
+      switchTab('dashboard');
+    });
+
+    // ESCUCHAR DATOS EN TIEMPO REAL
+    function listenTransactions() {
+      const q = query(collection(db, "users", currentUser.uid, "transactions"));
+      onSnapshot(q, (snapshot) => {
+        allTransactions = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderDashboard();
+      });
+    }
+
+    window.deleteTx = async (id) => {
+      if (!confirm("¿Eliminar este registro completo?")) return;
+      await deleteDoc(doc(db, "users", currentUser.uid, "transactions", id));
+    };
+
+    // UTILIDADES
+    function getMonthDiff(startDateStr, targetMonthStr) {
+      const [sYear, sMonth] = startDateStr.split('-').map(Number);
+      const [tYear, tMonth] = targetMonthStr.split('-').map(Number);
+      return (tYear - sYear) * 12 + (tMonth - sMonth);
+    }
+
+    function addMonths(baseMonthStr, offset) {
+      const [year, month] = baseMonthStr.split('-').map(Number);
+      const d = new Date(year, month - 1 + offset, 1);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    function formatMonthLabel(monthStr) {
+      const [year, month] = monthStr.split('-').map(Number);
+      const names = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+      return `${names[month - 1]} ${String(year).slice(2)}`;
+    }
+
+    function formatMoney(num, curr) {
+      const prefix = curr === 'USD' ? 'US$ ' : '$ ';
+      return prefix + num.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    }
+
+    function isRecurringActiveInMonth(tx, targetMonthStr) {
+      const diff = getMonthDiff(tx.date, targetMonthStr);
+      if (diff < 0) return false;
+      if (tx.endMonth && targetMonthStr > tx.endMonth) return false;
+      return true;
+    }
+
+    function getMonthSummary(monthStr) {
+      const res = {
+        ARS: { income: 0, cashExp: 0, creditDue: 0 },
+        USD: { income: 0, cashExp: 0, creditDue: 0 }
+      };
+      allTransactions.forEach(tx => {
+        const diff = getMonthDiff(tx.date, monthStr);
+
+        if (tx.isRecurring) {
+          if (!isRecurringActiveInMonth(tx, monthStr)) return;
+          if (tx.type === 'income') {
+            res[tx.currency].income += tx.amount;
+          } else if (tx.paymentMethod && tx.paymentMethod !== 'cash') {
+            res[tx.currency].creditDue += tx.amount;
+          } else {
+            res[tx.currency].cashExp += tx.amount;
+          }
+          return;
+        }
+
+        if (tx.type === 'income' && diff === 0) {
+          res[tx.currency].income += tx.amount;
+        } else if (tx.type === 'expense') {
+          if (tx.paymentMethod === 'cash' && diff === 0) {
+            res[tx.currency].cashExp += tx.amount;
+          } else if (tx.paymentMethod !== 'cash' && diff >= 0 && diff < tx.installments) {
+            res[tx.currency].creditDue += (tx.amount / tx.installments);
+          }
+        }
+      });
+      return res;
+    }
+
+    function getEntityCreditDue(monthStr, filterKey, curr) {
+      let total = 0;
+      allTransactions.forEach(tx => {
+        if (tx.type !== 'expense' || !tx.paymentMethod || tx.paymentMethod === 'cash') return;
+        if (tx.currency !== curr) return;
+        if (filterKey !== 'ALL') {
+          const [method, entName] = filterKey.split('::');
+          if (tx.paymentMethod !== method || tx.entity !== entName) return;
+        }
+
+        if (tx.isRecurring) {
+          if (isRecurringActiveInMonth(tx, monthStr)) {
+            total += tx.amount;
+          }
+        } else {
+          const diff = getMonthDiff(tx.date, monthStr);
+          if (diff >= 0 && diff < tx.installments) {
+            total += (tx.amount / tx.installments);
+          }
+        }
+      });
+      return total;
+    }
+
+    function renderDashboard() {
+      const selectedMonth = document.getElementById('month-selector').value;
+      const totals = getMonthSummary(selectedMonth);
+
+      let activeItems = [];
+      let entityCardsMap = {};
+      let activeInstallmentItems = [];
+      let categoryTotals = { ARS: {}, USD: {} };
+
+      allTransactions.forEach(tx => {
+        const diff = getMonthDiff(tx.date, selectedMonth);
+
+        if (tx.isRecurring) {
+          if (!isRecurringActiveInMonth(tx, selectedMonth)) return;
+          const isEntityRecurring = tx.type === 'expense' && tx.paymentMethod && tx.paymentMethod !== 'cash';
+          const badgeLabel = isEntityRecurring
+            ? `Débito auto • ${tx.entity}${tx.endMonth ? ` (hasta ${tx.endMonth})` : ''}`
+            : (tx.endMonth ? `Fijo mensual (hasta ${tx.endMonth})` : 'Fijo mensual');
+
+          const itemObj = {
+            ...tx,
+            displayAmount: tx.amount,
+            cuotaInfo: badgeLabel
+          };
+
+          activeItems.push(itemObj);
+
+          if (tx.type === 'expense') {
+            categoryTotals[tx.currency][tx.category] = (categoryTotals[tx.currency][tx.category] || 0) + tx.amount;
+
+            if (isEntityRecurring) {
+              activeInstallmentItems.push(itemObj);
+              const filterKey = `${tx.paymentMethod}::${tx.entity}`;
+              const cardUniqueKey = `${filterKey}::${tx.currency}`;
+              const label = `${tx.paymentMethod === 'card' ? 'Tarjeta' : 'Préstamo'}: ${tx.entity} (${tx.currency})`;
+              if (!entityCardsMap[cardUniqueKey]) {
+                entityCardsMap[cardUniqueKey] = { filterKey, label, currency: tx.currency, amount: 0 };
+              }
+              entityCardsMap[cardUniqueKey].amount += tx.amount;
+            }
+          }
+          return;
+        }
+
+        if (tx.type === 'income' && diff === 0) {
+          activeItems.push({ ...tx, displayAmount: tx.amount, cuotaInfo: null });
+        } 
+        else if (tx.type === 'expense') {
+          if (tx.paymentMethod === 'cash' && diff === 0) {
+            activeItems.push({ ...tx, displayAmount: tx.amount, cuotaInfo: 'Contado / Débito' });
+            categoryTotals[tx.currency][tx.category] = (categoryTotals[tx.currency][tx.category] || 0) + tx.amount;
+          } 
+          else if (tx.paymentMethod !== 'cash' && diff >= 0 && diff < tx.installments) {
+            const quotaAmount = tx.amount / tx.installments;
+            const currentQuota = diff + 1;
+            
+            categoryTotals[tx.currency][tx.category] = (categoryTotals[tx.currency][tx.category] || 0) + quotaAmount;
+
+            const itemObj = { 
+              ...tx, 
+              displayAmount: quotaAmount, 
+              currentQuota,
+              cuotaInfo: `${tx.entity} • Cuota ${currentQuota}/${tx.installments}` 
+            };
+
+            activeItems.push(itemObj);
+            activeInstallmentItems.push(itemObj);
+
+            const filterKey = `${tx.paymentMethod}::${tx.entity}`;
+            const cardUniqueKey = `${filterKey}::${tx.currency}`;
+            const label = `${tx.paymentMethod === 'card' ? 'Tarjeta' : 'Préstamo'}: ${tx.entity} (${tx.currency})`;
+            if (!entityCardsMap[cardUniqueKey]) {
+              entityCardsMap[cardUniqueKey] = {
+                filterKey,
+                label,
+                currency: tx.currency,
+                amount: 0
+              };
+            }
+            entityCardsMap[cardUniqueKey].amount += quotaAmount;
+          }
+        }
+      });
+
+      ['ARS', 'USD'].forEach(curr => {
+        const t = totals[curr];
+        const balance = t.income - t.cashExp - t.creditDue;
+        const lower = curr.toLowerCase();
+        
+        const balEl = document.getElementById(`${lower}-balance`);
+        balEl.textContent = formatMoney(balance, curr);
+        balEl.className = `text-3xl font-bold tracking-tight mt-0.5 ${balance >= 0 ? 'text-[#f5efe6]' : 'text-[#e5988e]'}`;
+
+        document.getElementById(`${lower}-income`).textContent = formatMoney(t.income, curr);
+        document.getElementById(`${lower}-cash-expense`).textContent = formatMoney(t.cashExp, curr);
+        document.getElementById(`${lower}-credit-due`).textContent = formatMoney(t.creditDue, curr);
+      });
+
+      const listEl = document.getElementById('transactions-list');
+      if (activeItems.length === 0) {
+        listEl.innerHTML = `<p class="p-8 text-center text-sm text-[#9e958b]">No hay movimientos registrados para este mes.</p>`;
+      } else {
+        activeItems.sort((a, b) => b.createdAt - a.createdAt);
+        listEl.innerHTML = activeItems.map(item => `
+          <div class="p-4 flex items-center justify-between gap-4 hover:bg-[#26221e]/60 transition">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-medium text-sm text-[#f5efe6] truncate">${item.category}</span>
+                ${item.cuotaInfo ? `<span class="text-[11px] px-2 py-0.5 rounded-md ${item.isRecurring ? 'bg-[#d4b996]/15 text-[#e6cfb0] border border-[#d4b996]/30' : 'bg-[#26221e] text-[#d1c8be] border border-[#3f3831]'}">${item.cuotaInfo}</span>` : ''}
+              </div>
+              <p class="text-xs text-[#9e958b] mt-0.5 truncate">${item.note || item.date}</p>
+            </div>
+            <div class="flex items-center gap-2.5 shrink-0">
+              <span class="font-semibold text-sm ${item.type === 'income' ? 'text-[#9ec4a5]' : 'text-[#f5efe6]'}">
+                ${item.type === 'income' ? '+' : '-'} ${formatMoney(item.displayAmount, item.currency)}
+              </span>
+              <button onclick="editTx('${item.id}')" title="Editar" class="text-[#b5aca2] hover:text-[#d4b996] text-xs px-1">✎</button>
+              <button onclick="deleteTx('${item.id}')" title="Eliminar" class="text-[#b5aca2] hover:text-[#e5988e] text-sm px-1">&times;</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      const chartEl = document.getElementById('category-chart');
+      const catEntries = Object.entries(categoryTotals[chartCurrency]).sort((a, b) => b[1] - a[1]);
+      const totalExpenseCurr = catEntries.reduce((acc, [, val]) => acc + val, 0);
+
+      if (catEntries.length === 0) {
+        chartEl.innerHTML = `<p class="text-center text-sm text-[#9e958b] py-4">Sin gastos registrados en ${chartCurrency} para este mes.</p>`;
+      } else {
+        const maxVal = catEntries[0][1];
+        const barColors = [
+          'bg-[#d4b996]', 'bg-[#c49a6c]', 'bg-[#86b08e]', 'bg-[#d98276]', 
+          'bg-[#b5a38d]', 'bg-[#a38b71]', 'bg-[#8fa69d]', 'bg-[#c9a690]', 'bg-[#998d82]'
+        ];
+
+        chartEl.innerHTML = catEntries.map(([cat, val], idx) => {
+          const pctOfTotal = ((val / totalExpenseCurr) * 100).toFixed(1);
+          const barWidth = Math.max((val / maxVal) * 100, 4);
+          const colorClass = barColors[idx % barColors.length];
+
+          return `
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2">
+                  <span class="font-medium text-[#f5efe6]">${cat}</span>
+                  <span class="text-[#9e958b]">(${pctOfTotal}%)</span>
+                </div>
+                <span class="font-semibold text-[#f5efe6]">${formatMoney(val, chartCurrency)}</span>
+              </div>
+              <div class="w-full h-2.5 bg-[#141210] rounded-full overflow-hidden border border-[#36302a]">
+                <div class="${colorClass} h-full rounded-full transition-all duration-500" style="width: ${barWidth}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      renderProjectionChart(selectedMonth);
+      renderInstallmentsTab(selectedMonth, entityCardsMap, activeInstallmentItems);
+    }
+
+    function renderInstallmentsTab(selectedMonth, entityCardsMap, activeInstallmentItems) {
+      const uniqueEntities = new Map();
+      allTransactions.forEach(tx => {
+        if (tx.type === 'expense' && tx.paymentMethod && tx.paymentMethod !== 'cash' && tx.entity) {
+          const fKey = `${tx.paymentMethod}::${tx.entity}`;
+          const label = `${tx.paymentMethod === 'card' ? 'Tarjeta' : 'Préstamo'}: ${tx.entity}`;
+          uniqueEntities.set(fKey, label);
+        }
+      });
+
+      const pillsEl = document.getElementById('entity-filter-pills');
+      const clearBtn = document.getElementById('btn-clear-entity-filter');
+
+      if (selectedEntityFilter !== 'ALL') {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+
+      let pillsHtml = `
+        <button onclick="selectEntityFilter('ALL')" class="px-3 py-1.5 rounded-lg text-xs font-medium transition ${selectedEntityFilter === 'ALL' ? 'btn-sand font-semibold' : 'bg-[#26221e] text-[#c7beb4] border border-[#3f3831] hover:text-[#f5efe6]'}">
+          Todas
+        </button>
+      `;
+      uniqueEntities.forEach((label, fKey) => {
+        const isActive = selectedEntityFilter === fKey;
+        pillsHtml += `
+          <button onclick="selectEntityFilter('${fKey}')" class="px-3 py-1.5 rounded-lg text-xs font-medium transition ${isActive ? 'btn-sand font-semibold' : 'bg-[#26221e] text-[#c7beb4] border border-[#3f3831] hover:text-[#f5efe6]'}">
+            ${label}
+          </button>
+        `;
+      });
+      pillsEl.innerHTML = pillsHtml;
+
+      const breakdownEl = document.getElementById('cards-breakdown');
+      const cardList = Object.values(entityCardsMap);
+      if (cardList.length === 0) {
+        breakdownEl.innerHTML = `<p class="text-sm text-[#9e958b] col-span-2">No tenés cuotas ni débitos automáticos activos este mes.</p>`;
+      } else {
+        breakdownEl.innerHTML = cardList.map(c => {
+          const isSelected = selectedEntityFilter === c.filterKey;
+          return `
+            <button type="button" onclick="selectEntityFilter('${c.filterKey}')" class="text-left p-4 rounded-xl transition flex items-center justify-between ${isSelected ? 'bg-[#d4b996]/15 border-2 border-[#d4b996]' : 'bg-[#26221e]/80 border border-[#3f3831] hover:border-[#d4b996]/50'}">
+              <div>
+                <span class="text-sm font-medium text-[#e6dfd7] block">${c.label}</span>
+                <span class="text-[11px] text-[#9e958b]">${isSelected ? 'Filtro activo • Clic para ver todas' : 'Clic para filtrar y ver proyección'}</span>
+              </div>
+              <span class="text-base font-bold text-[#e3c08d]">${formatMoney(c.amount, c.currency)}</span>
+            </button>
+          `;
+        }).join('');
+      }
+
+      let filterDisplayName = 'Todas las Tarjetas y Préstamos';
+      if (selectedEntityFilter !== 'ALL') {
+        const [method, entName] = selectedEntityFilter.split('::');
+        filterDisplayName = `${method === 'card' ? 'Tarjeta' : 'Préstamo'}: ${entName}`;
+      }
+      document.getElementById('entity-proj-title').textContent = `Proyección de Vencimientos: ${filterDisplayName}`;
+      document.getElementById('installments-list-title').textContent = selectedEntityFilter === 'ALL'
+        ? 'Detalle de Cuotas y Débitos Automáticos (Todas)'
+        : `Consumos, Cuotas y Débitos de ${filterDisplayName}`;
+
+      renderEntityProjectionChart(selectedMonth);
+
+      const filteredItems = activeInstallmentItems.filter(item => {
+        if (selectedEntityFilter === 'ALL') return true;
+        return `${item.paymentMethod}::${item.entity}` === selectedEntityFilter;
+      });
+
+      const detailListEl = document.getElementById('installments-detail-list');
+      if (filteredItems.length === 0) {
+        detailListEl.innerHTML = `<p class="text-sm text-[#9e958b]">No hay consumos en cuotas ni débitos registrados para este filtro en el mes seleccionado.</p>`;
+      } else {
+        filteredItems.sort((a, b) => b.displayAmount - a.displayAmount);
+        detailListEl.innerHTML = filteredItems.map(item => {
+          if (item.isRecurring) {
+            return `
+              <div class="p-4 rounded-xl bg-[#26221e]/60 border border-[#3f3831] space-y-2">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span class="text-xs font-semibold px-2 py-0.5 rounded bg-[#d4b996]/15 text-[#e3c08d] border border-[#d4b996]/30">${item.entity}</span>
+                      <span class="text-xs font-medium px-2 py-0.5 rounded bg-[#86b08e]/15 text-[#9ec4a5] border border-[#86b08e]/30">Débito Automático</span>
+                      <span class="text-sm font-medium text-[#f5efe6]">${item.category}</span>
+                      ${item.note ? `<span class="text-xs text-[#b5aca2]">• ${item.note}</span>` : ''}
+                    </div>
+                    <p class="text-[11px] text-[#9e958b] mt-0.5">Activo desde: ${item.date}${item.endMonth ? ` • Hasta: ${item.endMonth}` : ' • Mensual continuo'}</p>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <div class="text-right">
+                      <span class="text-sm font-bold text-[#f5efe6]">${formatMoney(item.displayAmount, item.currency)}</span>
+                      <span class="text-xs text-[#9e958b] block">Fijo mensual</span>
+                    </div>
+                    <div class="flex items-center gap-1 border-l border-[#36302a] pl-2.5">
+                      <button onclick="editTx('${item.id}')" title="Editar o actualizar monto desde este mes" class="p-1.5 rounded-lg bg-[#1e1b18] hover:bg-[#332d27] text-[#c7beb4] hover:text-[#d4b996] text-xs transition">✎</button>
+                      <button onclick="deleteTx('${item.id}')" title="Eliminar débito" class="p-1.5 rounded-lg bg-[#1e1b18] hover:bg-[#332d27] text-[#c7beb4] hover:text-[#e5988e] text-xs transition">&times;</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+
+          const progressPct = Math.round((item.currentQuota / item.installments) * 100);
+          return `
+            <div class="p-4 rounded-xl bg-[#26221e]/60 border border-[#3f3831] space-y-2.5">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded bg-[#d4b996]/15 text-[#e3c08d] border border-[#d4b996]/30">${item.entity}</span>
+                    <span class="text-sm font-medium text-[#f5efe6]">${item.category}</span>
+                    ${item.note ? `<span class="text-xs text-[#b5aca2]">• ${item.note}</span>` : ''}
+                  </div>
+                  <p class="text-[11px] text-[#9e958b] mt-0.5">Inicio: ${item.date}</p>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="text-right">
+                    <span class="text-sm font-bold text-[#f5efe6]">${formatMoney(item.displayAmount, item.currency)}</span>
+                    <span class="text-xs text-[#9e958b] block">Total: ${formatMoney(item.amount, item.currency)}</span>
+                  </div>
+                  <div class="flex items-center gap-1 border-l border-[#36302a] pl-2.5">
+                    <button onclick="editTx('${item.id}')" title="Editar consumo o cuotas" class="p-1.5 rounded-lg bg-[#1e1b18] hover:bg-[#332d27] text-[#c7beb4] hover:text-[#d4b996] text-xs transition">✎</button>
+                    <button onclick="deleteTx('${item.id}')" title="Eliminar consumo" class="p-1.5 rounded-lg bg-[#1e1b18] hover:bg-[#332d27] text-[#c7beb4] hover:text-[#e5988e] text-xs transition">&times;</button>
+                  </div>
+                </div>
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs">
+                  <span class="text-[#b5aca2] font-medium">Avance: <strong class="text-[#f5efe6]">${item.currentQuota}/${item.installments}</strong></span>
+                  <span class="text-[#9e958b]">${progressPct}% completado</span>
+                </div>
+                <div class="w-full h-2 bg-[#141210] rounded-full overflow-hidden border border-[#36302a]">
+                  <div class="bg-[#d4b996] h-full rounded-full transition-all duration-500" style="width: ${progressPct}%"></div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function renderEntityProjectionChart(baseMonth) {
+      const horizon = parseInt(document.getElementById('entity-proj-horizon').value) || 6;
+      const labels = [];
+      const series = [];
+
+      for (let i = 0; i < horizon; i++) {
+        const mStr = addMonths(baseMonth, i);
+        labels.push(formatMonthLabel(mStr));
+        series.push(Math.round(getEntityCreditDue(mStr, selectedEntityFilter, entityProjCurrency)));
+      }
+
+      const currentVal = series[0] || 0;
+      const endVal = series[series.length - 1] || 0;
+      const diffVal = endVal - currentVal;
+      const totalPeriod = series.reduce((a, b) => a + b, 0);
+
+      const summaryEl = document.getElementById('entity-proj-summary');
+      summaryEl.innerHTML = `
+        <div class="p-3 rounded-xl bg-[#26221e]/80 border border-[#3f3831]">
+          <p class="text-[#9e958b]">Vencimiento este mes (${labels[0]})</p>
+          <p class="text-sm font-bold text-[#e3c08d] mt-0.5">${formatMoney(currentVal, entityProjCurrency)}</p>
+        </div>
+        <div class="p-3 rounded-xl bg-[#26221e]/80 border border-[#3f3831]">
+          <p class="text-[#9e958b]">Proyección en ${labels[labels.length - 1]}</p>
+          <p class="text-sm font-bold ${diffVal <= 0 ? 'text-[#9ec4a5]' : 'text-[#e5988e]'} mt-0.5">
+            ${formatMoney(endVal, entityProjCurrency)} 
+            <span class="text-[11px] font-normal">(${diffVal <= 0 ? 'Baja ' : 'Sube '}${formatMoney(Math.abs(diffVal), entityProjCurrency)})</span>
+          </p>
+        </div>
+        <div class="p-3 rounded-xl bg-[#26221e]/80 border border-[#3f3831]">
+          <p class="text-[#9e958b]">Total a pagar en ${horizon} meses</p>
+          <p class="text-sm font-bold text-[#f5efe6] mt-0.5">${formatMoney(totalPeriod, entityProjCurrency)}</p>
+        </div>
+      `;
+
+      const ctx = document.getElementById('entityProjectionChart').getContext('2d');
+      if (entityProjChartInstance) {
+        entityProjChartInstance.destroy();
+      }
+
+      entityProjChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Cuotas + Débitos Automáticos',
+              data: series,
+              backgroundColor: 'rgba(212, 185, 150, 0.75)',
+              hoverBackgroundColor: '#d4b996',
+              borderColor: '#d4b996',
+              borderWidth: 1,
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: { color: '#c7beb4', font: { size: 11, family: 'Inter' } }
+            },
+            tooltip: {
+              backgroundColor: '#1e1b18',
+              borderColor: '#3f3831',
+              borderWidth: 1,
+              titleColor: '#f5efe6',
+              bodyColor: '#d1c8be',
+              callbacks: {
+                label: (context) => `${context.dataset.label}: ${formatMoney(context.parsed.y, entityProjCurrency)}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#9e958b', font: { size: 11 } }
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(54, 48, 42, 0.6)' },
+              ticks: {
+                color: '#9e958b',
+                font: { size: 11 },
+                callback: (val) => entityProjCurrency === 'USD' ? 'US$ ' + val.toLocaleString('es-AR') : '$ ' + val.toLocaleString('es-AR')
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderProjectionChart(baseMonth) {
+      const horizon = parseInt(document.getElementById('projection-horizon').value) || 6;
+      const labels = [];
+      const creditSeries = [];
+      const totalExpenseSeries = [];
+      const incomeSeries = [];
+
+      for (let i = 0; i < horizon; i++) {
+        const mStr = addMonths(baseMonth, i);
+        const summary = getMonthSummary(mStr)[projCurrency];
+        labels.push(formatMonthLabel(mStr));
+        creditSeries.push(Math.round(summary.creditDue));
+        totalExpenseSeries.push(Math.round(summary.creditDue + summary.cashExp));
+        incomeSeries.push(Math.round(summary.income));
+      }
+
+      const currentCredit = creditSeries[0] || 0;
+      const endCredit = creditSeries[creditSeries.length - 1] || 0;
+      const diffCredit = endCredit - currentCredit;
+      const totalCommittedHorizon = creditSeries.reduce((a, b) => a + b, 0);
+
+      const summaryEl = document.getElementById('projection-summary');
+      summaryEl.innerHTML = `
+        <div class="p-3 rounded-xl bg-[#26221e]/80 border border-[#3f3831]">
+          <p class="text-[#9e958b]">Tarjetas / Prést. este mes (${labels[0]})</p>
+          <p class="text-sm font-bold text-[#e3c08d] mt-0.5">${formatMoney(currentCredit, projCurrency)}</p>
+        </div>
+        <div class="p-3 rounded-xl bg-[#26221e]/80 border border-[#3f3831]">
+          <p class="text-[#9e958b]">Tarjetas / Prést. en ${labels[labels.length - 1]}</p>
+          <p class="text-sm font-bold ${diffCredit <= 0 ? 'text-[#9ec4a5]' : 'text-[#e5988e]'} mt-0.5">
+            ${formatMoney(endCredit, projCurrency)} 
+            <span class="text-[11px] font-normal">(${diffCredit <= 0 ? 'Baja ' : 'Sube '}${formatMoney(Math.abs(diffCredit), projCurrency)})</span>
+          </p>
+        </div>
+        <div class="p-3 rounded-xl bg-[#26221e]/80 border border-[#3f3831]">
+          <p class="text-[#9e958b]">Total tarjetas / prést. en ${horizon}m</p>
+          <p class="text-sm font-bold text-[#f5efe6] mt-0.5">${formatMoney(totalCommittedHorizon, projCurrency)}</p>
+        </div>
+      `;
+
+      const ctx = document.getElementById('projectionChart').getContext('2d');
+      if (projChartInstance) {
+        projChartInstance.destroy();
+      }
+
+      projChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Tarjetas / Préstamos (Cuotas + Débitos)',
+              data: creditSeries,
+              borderColor: '#d4b996',
+              backgroundColor: 'rgba(212, 185, 150, 0.14)',
+              borderWidth: 2.5,
+              tension: 0.35,
+              fill: true,
+              pointRadius: 4,
+              pointBackgroundColor: '#d4b996'
+            },
+            {
+              label: 'Egresos Totales (Tarjetas + Fijos + Contado)',
+              data: totalExpenseSeries,
+              borderColor: '#d98276',
+              backgroundColor: 'transparent',
+              borderWidth: 2,
+              borderDash: [5, 5],
+              tension: 0.35,
+              pointRadius: 3,
+              pointBackgroundColor: '#d98276'
+            },
+            {
+              label: 'Ingresos (Fijos + Puntuales)',
+              data: incomeSeries,
+              borderColor: '#86b08e',
+              backgroundColor: 'transparent',
+              borderWidth: 2,
+              tension: 0.35,
+              pointRadius: 3,
+              pointBackgroundColor: '#86b08e'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              labels: { color: '#c7beb4', font: { size: 11, family: 'Inter' } }
+            },
+            tooltip: {
+              backgroundColor: '#1e1b18',
+              borderColor: '#3f3831',
+              borderWidth: 1,
+              titleColor: '#f5efe6',
+              bodyColor: '#d1c8be',
+              callbacks: {
+                label: (context) => `${context.dataset.label}: ${formatMoney(context.parsed.y, projCurrency)}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(54, 48, 42, 0.6)' },
+              ticks: { color: '#9e958b', font: { size: 11 } }
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(54, 48, 42, 0.6)' },
+              ticks: {
+                color: '#9e958b',
+                font: { size: 11 },
+                callback: (val) => projCurrency === 'USD' ? 'US$ ' + val.toLocaleString('es-AR') : '$ ' + val.toLocaleString('es-AR')
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // NAVEGACIÓN DE PESTAÑAS
+    window.switchTab = (tabName) => {
+      ['dashboard', 'new', 'installments', 'settings'].forEach(t => {
+        document.getElementById(`view-${t}`).classList.add('hidden');
+        const btn = document.getElementById(`tab-${t}`);
+        btn.className = "tab-btn px-4 py-2 rounded-xl text-sm font-medium bg-[#1e1b18] border border-[#36302a] text-[#c7beb4] hover:text-[#f5efe6] transition";
+      });
+      document.getElementById(`view-${tabName}`).classList.remove('hidden');
+      document.getElementById(`tab-${tabName}`).className = "tab-btn px-4 py-2 rounded-xl text-sm font-semibold btn-sand transition";
+    };
+  </script>
+</body>
+</html>
