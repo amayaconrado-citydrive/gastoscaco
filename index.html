@@ -195,12 +195,40 @@
         </div>
       </div>
 
-      <!-- Listado de Movimientos del Mes -->
+      <!-- Listado de Movimientos del Mes con Buscador, Filtro y Orden -->
       <div class="glass-card rounded-2xl overflow-hidden">
-        <div class="p-5 border-b border-[#36302a] flex items-center justify-between">
-          <h2 class="font-semibold text-sm text-[#f5efe6]">Movimientos e Impacto del Mes Seleccionado</h2>
-          <button onclick="openNewForm()" class="text-xs text-[#d4b996] hover:text-[#e6cfb0] font-semibold">+ Nuevo registro</button>
+        <div class="p-5 border-b border-[#36302a] space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 class="font-semibold text-sm text-[#f5efe6]">Movimientos e Impacto del Mes Seleccionado</h2>
+              <p id="tx-filter-count" class="text-[11px] text-[#9e958b] mt-0.5"></p>
+            </div>
+            <button onclick="openNewForm()" class="text-xs text-[#d4b996] hover:text-[#e6cfb0] font-semibold">+ Nuevo registro</button>
+          </div>
+
+          <!-- Barra de búsqueda, filtro por categoría y ordenamiento -->
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 pt-1">
+            <div class="sm:col-span-5 relative">
+              <input type="text" id="tx-search-input" placeholder="Buscar por descripción, categoría o tarjeta..." class="w-full px-3 py-1.5 rounded-lg text-xs">
+            </div>
+            <div class="sm:col-span-4">
+              <select id="tx-filter-category" class="w-full px-2.5 py-1.5 rounded-lg text-xs">
+                <option value="ALL">Todas las categorías</option>
+              </select>
+            </div>
+            <div class="sm:col-span-3 flex gap-1.5">
+              <select id="tx-sort-order" class="w-full px-2.5 py-1.5 rounded-lg text-xs">
+                <option value="recent">Más recientes</option>
+                <option value="amount-desc">Mayor a menor $</option>
+                <option value="amount-asc">Menor a mayor $</option>
+              </select>
+              <button type="button" id="btn-reset-tx-filters" onclick="resetTxFilters()" title="Limpiar filtros" class="hidden px-2.5 py-1.5 rounded-lg bg-[#26221e] hover:bg-[#332d27] border border-[#3f3831] text-xs text-[#d4b996] shrink-0">
+                &times;
+              </button>
+            </div>
+          </div>
         </div>
+
         <div id="transactions-list" class="divide-y divide-[#2d2823]">
           <p class="p-6 text-center text-sm text-[#9e958b]">Cargando movimientos...</p>
         </div>
@@ -231,7 +259,7 @@
             <p class="text-xs text-[#b5aca2]">Evolución de cuotas y débitos en tarjetas vs. ingresos y gastos totales proyectados</p>
           </div>
           <div class="flex items-center gap-2">
-            <select id="projection-horizon" onchange="renderDashboard()" class="px-2.5 py-1 rounded-lg text-xs">
+            <select id="projection-horizon" class="px-2.5 py-1 rounded-lg text-xs">
               <option value="6">6 meses</option>
               <option value="12">12 meses</option>
             </select>
@@ -380,7 +408,7 @@
           <button onclick="openNewRecurringForm()" class="px-3.5 py-2 rounded-xl text-xs font-semibold btn-sand">+ Nuevo Fijo / Débito</button>
         </div>
 
-        <!-- Filtros rápidos -->
+        <!-- Filtros rápidos y búsqueda -->
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex flex-wrap gap-2">
             <button onclick="setRecurringFilter('ALL')" id="rec-filter-ALL" class="px-3 py-1.5 rounded-lg text-xs font-semibold btn-sand">Todos</button>
@@ -388,10 +416,13 @@
             <button onclick="setRecurringFilter('CARD')" id="rec-filter-CARD" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#26221e] text-[#c7beb4] border border-[#3f3831] hover:text-[#f5efe6]">Débitos en Tarjeta</button>
             <button onclick="setRecurringFilter('INCOME')" id="rec-filter-INCOME" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#26221e] text-[#c7beb4] border border-[#3f3831] hover:text-[#f5efe6]">Ingresos Fijos</button>
           </div>
-          <label class="flex items-center gap-2 text-xs text-[#b5aca2] cursor-pointer select-none">
-            <input type="checkbox" id="rec-show-history" onchange="renderDashboard()" class="w-3.5 h-3.5 rounded accent-[#d4b996]">
-            Mostrar también históricos finalizados
-          </label>
+          <div class="flex flex-wrap items-center gap-3">
+            <input type="text" id="rec-search-input" placeholder="Buscar fijo..." class="px-3 py-1.5 rounded-lg text-xs">
+            <label class="flex items-center gap-2 text-xs text-[#b5aca2] cursor-pointer select-none">
+              <input type="checkbox" id="rec-show-history" class="w-3.5 h-3.5 rounded accent-[#d4b996]">
+              Mostrar históricos
+            </label>
+          </div>
         </div>
 
         <div id="recurring-list" class="space-y-3 pt-1"></div>
@@ -429,7 +460,7 @@
             <p class="text-xs text-[#b5aca2]">Evolución mensual de cuotas + débitos automáticos adheridos</p>
           </div>
           <div class="flex items-center gap-2">
-            <select id="entity-proj-horizon" onchange="renderDashboard()" class="px-2.5 py-1 rounded-lg text-xs">
+            <select id="entity-proj-horizon" class="px-2.5 py-1 rounded-lg text-xs">
               <option value="6">6 meses</option>
               <option value="12">12 meses</option>
             </select>
@@ -526,7 +557,7 @@
     let projCurrency = 'ARS';
     let entityProjCurrency = 'ARS';
     let selectedEntityFilter = 'ALL';
-    let recurringFilter = 'ALL'; // 'ALL', 'EXPENSE', 'CARD', 'INCOME'
+    let recurringFilter = 'ALL';
     let projChartInstance = null;
     let entityProjChartInstance = null;
 
@@ -543,7 +574,22 @@
     document.getElementById('month-selector').value = currentMonthStr;
     document.getElementById('tx-date').value = today.toISOString().split('T')[0];
 
+    // LISTENERS DE CONTROLES INTERACTIVOS
     document.getElementById('month-selector').addEventListener('change', renderDashboard);
+    document.getElementById('projection-horizon').addEventListener('change', renderDashboard);
+    document.getElementById('entity-proj-horizon').addEventListener('change', renderDashboard);
+    document.getElementById('tx-search-input').addEventListener('input', renderDashboard);
+    document.getElementById('tx-filter-category').addEventListener('change', renderDashboard);
+    document.getElementById('tx-sort-order').addEventListener('change', renderDashboard);
+    document.getElementById('rec-search-input').addEventListener('input', renderDashboard);
+    document.getElementById('rec-show-history').addEventListener('change', renderDashboard);
+
+    window.resetTxFilters = () => {
+      document.getElementById('tx-search-input').value = '';
+      document.getElementById('tx-filter-category').value = 'ALL';
+      document.getElementById('tx-sort-order').value = 'recent';
+      renderDashboard();
+    };
 
     window.stepMonth = (offset) => {
       const sel = document.getElementById('month-selector');
@@ -1145,12 +1191,62 @@
         document.getElementById(`${lower}-credit-due`).textContent = formatMoney(t.creditDue, curr);
       });
 
+      // Actualizar opciones del filtro de categorías con las presentes en el mes + configuradas
+      const catFilterSelect = document.getElementById('tx-filter-category');
+      const prevCatFilter = catFilterSelect.value;
+      const monthCats = new Set([...userConfig.expenseCats, ...userConfig.incomeCats, ...activeItems.map(i => i.category)]);
+      catFilterSelect.innerHTML = `<option value="ALL">Todas las categorías</option>` +
+        Array.from(monthCats).map(c => `<option value="${c}">${c}</option>`).join('');
+      if (Array.from(monthCats).includes(prevCatFilter)) {
+        catFilterSelect.value = prevCatFilter;
+      }
+
+      // Aplicar búsqueda, filtro de categoría y ordenamiento
+      const searchQuery = document.getElementById('tx-search-input').value.trim().toLowerCase();
+      const selectedCatFilter = catFilterSelect.value;
+      const sortOrder = document.getElementById('tx-sort-order').value;
+
+      const hasActiveFilters = searchQuery !== '' || selectedCatFilter !== 'ALL' || sortOrder !== 'recent';
+      const resetBtn = document.getElementById('btn-reset-tx-filters');
+      if (hasActiveFilters) {
+        resetBtn.classList.remove('hidden');
+      } else {
+        resetBtn.classList.add('hidden');
+      }
+
+      let displayedItems = activeItems.filter(item => {
+        if (selectedCatFilter !== 'ALL' && item.category !== selectedCatFilter) return false;
+        if (searchQuery) {
+          const haystack = `${item.category} ${item.note || ''} ${item.entity || ''} ${item.cuotaInfo || ''}`.toLowerCase();
+          if (!haystack.includes(searchQuery)) return false;
+        }
+        return true;
+      });
+
+      if (sortOrder === 'amount-desc') {
+        displayedItems.sort((a, b) => b.displayAmount - a.displayAmount);
+      } else if (sortOrder === 'amount-asc') {
+        displayedItems.sort((a, b) => a.displayAmount - b.displayAmount);
+      } else {
+        displayedItems.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      }
+
+      const countEl = document.getElementById('tx-filter-count');
+      if (displayedItems.length !== activeItems.length) {
+        countEl.textContent = `Mostrando ${displayedItems.length} de ${activeItems.length} movimientos`;
+      } else if (activeItems.length > 0) {
+        countEl.textContent = `${activeItems.length} movimientos en este mes`;
+      } else {
+        countEl.textContent = '';
+      }
+
       const listEl = document.getElementById('transactions-list');
       if (activeItems.length === 0) {
         listEl.innerHTML = `<p class="p-8 text-center text-sm text-[#9e958b]">No hay movimientos registrados para este mes.</p>`;
+      } else if (displayedItems.length === 0) {
+        listEl.innerHTML = `<p class="p-8 text-center text-sm text-[#9e958b]">Ningún movimiento coincide con tu búsqueda o filtro.</p>`;
       } else {
-        activeItems.sort((a, b) => b.createdAt - a.createdAt);
-        listEl.innerHTML = activeItems.map(item => `
+        listEl.innerHTML = displayedItems.map(item => `
           <div class="p-4 flex items-center justify-between gap-4 hover:bg-[#26221e]/60 transition">
             <div class="min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
@@ -1212,6 +1308,7 @@
 
     function renderRecurringTab(selectedMonth) {
       const showHistory = document.getElementById('rec-show-history').checked;
+      const recSearch = document.getElementById('rec-search-input').value.trim().toLowerCase();
       const allRecurring = allTransactions.filter(tx => Boolean(tx.isRecurring));
 
       let totalExpArs = 0;
@@ -1235,6 +1332,11 @@
       const filtered = allRecurring.filter(tx => {
         const isActive = isRecurringActiveInMonth(tx, selectedMonth);
         if (!showHistory && !isActive) return false;
+
+        if (recSearch) {
+          const text = `${tx.category} ${tx.note || ''} ${tx.entity || ''}`.toLowerCase();
+          if (!text.includes(recSearch)) return false;
+        }
 
         if (recurringFilter === 'EXPENSE') return tx.type === 'expense';
         if (recurringFilter === 'CARD') return tx.type === 'expense' && tx.paymentMethod && tx.paymentMethod !== 'cash';
